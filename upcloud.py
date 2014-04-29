@@ -53,17 +53,13 @@ class upcloud():
         print 'download files ...'
 
     def create_dir(self, path):
+        print 'creating directory %s ...' % path
         self.cloud.mkdir(path)
 
-    def remove_files(self):
-        print 'remove files ...'
-
-    def get_file_list(self, path, flag=True):
-        if flag:
-            self.filelist = self.cloud.getlist(path)
-            return self.filelist
-        else:
-            return self.cloud.getlist(path)
+    def remove_files(self, path):
+        print 'removing file %s ...' % path[:-1]
+        self.cloud.delete(path)
+    
     
     def check_file(self,path):
         '''if file not exit return None,else return file type.'''
@@ -87,9 +83,18 @@ class upcloud():
         else:
             return None
 
+    def get_file_info(self, path):
+        return self.cloud.getinfo(path)
+    
+    def get_file_list(self, path, flag=True):
+        if flag:
+            self.filelist = self.cloud.getlist(path)
+            return self.filelist
+        else:
+            return self.cloud.getlist(path)
 
-    def get_file_info(self):
-        print 'show file\'s info ...'
+    def clear_file_list_cache(self):
+        self.filelist = ''
 
     def get_usage_info(self):
         return self.cloud.usage()
@@ -142,4 +147,6 @@ if __name__ == '__main__':
     up = upcloud('kehrspace','kehr','kehr4444')
  #   up.connect_upyun()
   #  up.upload_files('/home/kehr/Github/upcloud/test/img/unix.png')
-    print up.get_usage_info()
+   # print up.get_usage_info()
+    print up.get_file_info('/a/b/c/d/')
+    print up.get_file_info('/a/')

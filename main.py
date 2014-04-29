@@ -61,7 +61,7 @@ class cmd_parser():
         return upyun.ED_AUTO
     
     def handle_jobs(self, bucket, username, passwd, timeout=30, endpoint=upyun.ED_AUTO):
-        prompt = self.args.username+'@'+self.args.bucket+' $ ' 
+        prompt = self.args.username+'@'+self.args.bucket+' > ' 
         try:
             cli = CLI(prompt, bucket, username, passwd, timeout, endpoint)
             cli.cmdloop()
