@@ -17,7 +17,7 @@ setup(
     name='upcloud',
     version='0.1.0',
     license='License :: OSI Approved :: MIT License',
-    description='manage your bucket of upcloud',
+    description='manage your bucket of UpYun',
     author=upcloud.__author__,
     author_email=upcloud.__mail__,
     platforms='Platform Independent',
