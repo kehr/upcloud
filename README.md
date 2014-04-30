@@ -10,6 +10,19 @@
 
 正在紧张的开发中...
 
+##安装  
+
+```bash
+pip install upcloud
+```
+##使用 
+
+```bash
+upcloud -b BUCKET -u USERNAME -p PASSWD
+```
+获取命令帮助:`command [-h|--help]`  
+获取详细说明:`man [command]`
+
 ##特色  
 
 1. 支持命令历史回滚
