@@ -33,7 +33,7 @@ setup(
         ],
     },
     classifiers=[
-        'Development Status :: 1 - Pre-Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
