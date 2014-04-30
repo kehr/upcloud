@@ -2,9 +2,9 @@
 
 这个项目的目标是实现`云空间本地化管理`。你可以用本项目提供的操作同步或备份你的云空间数据。
 
-**gitcafe ：** https://gitcafe.com/kehr/upcloud-for-UPYUN  
-**投票地址：**http://upyun.gitcafe.com/projects?category=top50   
-**项目名称：**upcloud-for-UPYUN   
+**gitcafe ：** https://gitcafe.com/kehr/upcloud-for-UPYUN   
+**投票地址：** http://upyun.gitcafe.com/projects?category=top50      
+**项目名称：** upcloud-for-UPYUN   
    
 **如果你觉得这东西挺有意思，请投上你宝贵的一票吧！你的支持是我最大的动力，先谢过！**继续码字符去了。
 
