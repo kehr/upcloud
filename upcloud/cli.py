@@ -6,28 +6,30 @@
 # @Mail:		 kehr.china@gmail.com
 # @Created Time: Thu 24 Apr 2014 05:08:30 PM CST
 # @Copyright:    MIT applies
-# @Description:   Interact with the bucket of upyun                  
+# @Description:  Interact with the bucket of UpYun                  
 #########################################################################
+import os 
 import cmd
 import sys
+import color 
 import upyun
 import argparse
 import readline
 import subprocess
 from upcloud import upcloud
 from datetime import datetime
-from color import colors 
+from __init__ import __version__ as version
 
-__version__ = 0.1
+__version__ = version 
 
 class CLI(cmd.Cmd):
 
     def __init__(self, prompt='>>> ',bucket=None, username=None, passwd=None, timeout=30, endpoint=upyun.ED_AUTO):
         cmd.Cmd.__init__(self)
         self.intro = self.get_help_message()
-        self.doc_header='All commands you can use (type help <command> get more info):'
-        self.undoc_header='All alias command:'
-        self.prompt = '%s%s%s' % (colors.BLUE,prompt,colors.END)
+        self.doc_header=color.render_color('All commands you can use (type help <command> get more info):')
+        self.undoc_header=color.render_color('All alias command:')
+        self.prompt = color.render_color(prompt,'blue')
         self.init_upcloud(bucket, username, passwd, timeout, endpoint)
 
 
@@ -55,6 +57,8 @@ class CLI(cmd.Cmd):
             self.parse_cmdline('put', args)
         except SystemExit:
             print 'Type "put -h" for help.'
+        except OSError as e:
+            print color.render_color('Error: ','error') , e
 
     def do_get(self, args):
         try:
@@ -105,11 +109,10 @@ class CLI(cmd.Cmd):
             self.show_help('usage','-h')
 
     def do_exit(self, args):
-        if args.split():
+        if args:
             self.show_help('exit', args.split())
         else:
-            print '\n\tEnjoy your day !\n'
-            print 'Bye'
+            print '\nEnjoy your day. Bye !'
             sys.exit(0)
 
     def do_shell(self, args):
@@ -144,18 +147,18 @@ class CLI(cmd.Cmd):
 
         for path in path_list:
             path = self.get_path(path)
-            print  '%s%s%s:'%(colors.PATH,path,colors.END)
+            print color.render_color(path,'path')+':'
 
             if args.directory:
                 if args.list:
                     self.show_file_list(True, path)
                 else:
-                    self.show_file_list(False, path)
+                    self.show_file_list(path)
             else:
                 if args.list:
                     self.show_file_list(True, path)
                 else:
-                    self.show_file_list(False, path)
+                    self.show_file_list(path)
             
             if len(path_list) > 1: print ''
 
@@ -172,8 +175,8 @@ class CLI(cmd.Cmd):
         file_num = 0
         name_list = []
         names = []
-        color_format = '%s  '+colors.PURPLE+'%-6s'+colors.END+'  %9s  '+colors.BLUE+'%-s'+colors.END 
-        normal_format ='%s  '+colors.GREEN+'%-6s'+colors.END+'  %9s  %-s' 
+        color_format = '%s  '+color.render_color('%-6s','purple')+'  %9s  '+color.render_color('%-s','blue')
+        normal_format = '%s  '+color.render_color('%-6s','green')+'  %9s  '+color.render_color('%-s','yellow')
         
         for info in info_list:
             info_time = datetime.fromtimestamp(int(info['time']))
@@ -198,21 +201,49 @@ class CLI(cmd.Cmd):
             name_list.append({info_name:info_type})
 
         name_list.sort()
-        name_color_format = colors.BLUE+'%s  '+colors.END
-        name_normal_format = '%s  '
-       # names=[]
+        name_dir_format = color.render_color('%s  ', 'blue')
+        name_file_format = color.render_color('%s  ', 'yellow')
+
         if not flag: 
             for name in name_list:
                 file_name,file_type = name.popitem()
-                name_format = name_color_format if file_type == '<dir>' else name_normal_format
+                name_format = name_dir_format if file_type == '<dir>' else name_file_format
                 if flag != None:
                     print name_format % file_name,
             print ''
-        print '\n%s%d directories%s, %s%d files%s' % \
-                (colors.PURPLE,dir_num,colors.END,colors.GREEN,file_num,colors.END)
+        count_format = color.render_color('\n%d directories', 'purple') + ',' + color.render_color(' %d files', 'green')
+        print count_format % (dir_num, file_num)
+
         return names
 
     def action_put(self, args):
+        source_list = args.source
+        destnation = args.destnation
+        self.get_local_files(source_list)
+        self.count = 0
+    count = 0 
+    def get_local_files(self, source):
+        for source_path in source:
+            path = os.path.abspath(source_path) 
+           # print 'start path: '+ path +'  ', os.path.exists(path)
+            if not os.path.exists(path):
+                pass
+                #print path+': file not exits !'
+            else:
+                if os.path.isdir(path):
+                    file_list = os.listdir(path)
+                    print 'dir:',path
+                    # enter sub dir 
+                    os.chdir(path)
+                    self.get_local_files(file_list)
+                    # return to parent dir (necessary!)
+                    os.chdir('..')
+                else:
+                    print 'file: '+path
+                    self.count += 1
+        print 'count:',self.count
+    
+    def put_to_upyun(self, source, destnation):
         pass
 
     def action_get(self, args):
@@ -293,10 +324,10 @@ class CLI(cmd.Cmd):
             return
         else:
             print '+'*50
-            print '%s%s%s:' % (colors.BLUE,path,colors.END)
+            print color.render_color(path,'path')+': '
             file_list = self.show_file_list(True,path)
             for file_name in file_list:
-                print 'removing %s%s%s: ' % (colors.BLUE, path, colors.END)
+                print 'removing '+color.render_color(path,'blue') +': '
                 sub_path = path + file_name+'/'
                 if self.check_file(sub_path) == 'folder':
                     self.recursive_rm(sub_path)
@@ -473,11 +504,14 @@ class CLI(cmd.Cmd):
                 args_list = parser.parse_args(args)
                 self.action_ls(args_list)
             elif command == 'put':
-                parser = argparse.ArgumentParser(prog='man', add_help=True,
+                parser = argparse.ArgumentParser(prog='put', add_help=True,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-                parser.add_argument('command', nargs='?', default='w',help='')
+                parser.add_argument('-s', '--source', nargs='+', required='True',
+                        help='The file path of your local system')
+                parser.add_argument('-d', '--destnation', required='True', 
+                        help='The file path of your bucket<UpYun space>')
                 args_list = parser.parse_args(args)
-                self.action_man(args_list)
+                self.action_put(args_list)
             elif command == 'get':
                 parser = argparse.ArgumentParser(prog='man', add_help=True,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -529,7 +563,6 @@ class CLI(cmd.Cmd):
             else:
                 self.command_not_found(command)
         except upyun.UpYunServiceException as e:
-           # print "HTTP Status: " + str(e.status)
             self.show_error(error='Server error', msg=e.msg)
         except upyun.UpYunClientException as e:
             self.show_error(error='Client error', msg=e.msg)
@@ -580,7 +613,7 @@ class CLI(cmd.Cmd):
                '\t'+description 
         print info
     
-    def get_path(self, path):
+    def get_path(self, path, sys=False):
         workspace = self.cloud.get_current_workspace()
         # format workspace
         if not workspace.endswith('/'):
@@ -613,8 +646,7 @@ class CLI(cmd.Cmd):
     def  human_readable(self, usage):
         '''format usage to human readable'''
         usage = int(usage)
-        if usage == 0:
-            return '0B'
+        if usage == 0: return '0B'
         level = [1.0 * 1024 ** n for n in xrange(6)]
         unit  = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
         i = 0
@@ -628,7 +660,8 @@ class CLI(cmd.Cmd):
         print 'Type "?" or "help" or press double <Tab> key to get a command list'
 
     def show_error(self, msg=None,  error='Error'):
-        print '%s%s: %s%s' % (colors.ERROR, error, colors.END, msg)
+        print color.render_color(error+': ','error')+msg
+
     # define the same action ...
     do_quit = do_exit
     do_q = do_exit
@@ -642,6 +675,6 @@ if __name__ == '__main__':
     try:
         cli.cmdloop()
     except KeyboardInterrupt:
-        cli.do_exit('exit')
+        print color.render_color('\nWarning: operation was interrupted by user !')
     except SystemExit:
-        print 'catch exit at main'
+        pass 
