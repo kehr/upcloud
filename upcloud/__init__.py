@@ -8,8 +8,8 @@
 # @Copyright:    MIT applies
 #########################################################################
 
-__version__ = '0.1.0'
-__author__  = 'kehr(wang kaixuan)'
+__version__ = '0.1.1'
+__author__  = 'kehr (wang kaixuan)'
 __mail__    = 'kehr.china@gmail.com'
 __license__ = 'MIT License: http://opensource.org/licenses/MIT'
 __all__ = ['cli','upcloud']    

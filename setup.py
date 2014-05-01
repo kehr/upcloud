@@ -15,7 +15,7 @@ if sys.argv[-1] == 'publish':
 
 setup(
     name='upcloud',
-    version='0.1.0',
+    version=upcloud.__version__,
     license='License :: OSI Approved :: MIT License',
     description='manage your bucket of UpYun',
     author=upcloud.__author__,
