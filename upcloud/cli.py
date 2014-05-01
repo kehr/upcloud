@@ -136,19 +136,23 @@ class CLI(cmd.Cmd):
     def do_shell(self, args):
         """Run shell command. command begain with '!'. \n"""
         command = args.split()
+        
+        # handle the empty line
+        if not command: return 
 
         if command[0] == 'cd':
             try:
                 if len(command) == 1:
                     os.chdir(self.current_local_workspace)
                 else:
-                    os.chdir(command[1])
+                    
+                    os.chdir(os.path.abspath(command[1]))
                 print  os.path.abspath('.')
             except OSError as e:
                 print color.render_color('Error: ','error') , e
-
-        shell_cmd = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
-        print shell_cmd.communicate()[0]
+        else:
+            shell_cmd = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
+            print shell_cmd.communicate()[0]
     
     def do_clear(self, args):
         if args.split():
