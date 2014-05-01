@@ -8,7 +8,7 @@
 # @Copyright:    MIT applies
 #########################################################################
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__  = 'kehr (wang kaixuan)'
 __mail__    = 'kehr.china@gmail.com'
 __license__ = 'MIT License: http://opensource.org/licenses/MIT'
