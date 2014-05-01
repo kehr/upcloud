@@ -13,6 +13,8 @@ import cmd
 import sys
 import color 
 import upyun
+import socket
+import getpass
 import argparse
 import readline
 import subprocess
@@ -54,11 +56,15 @@ class CLI(cmd.Cmd):
 
     def do_put(self, args):
         try:
+            current_local_path = os.path.abspath('.')
             self.parse_cmdline('put', args)
         except SystemExit:
             print 'Type "put -h" for help.'
         except OSError as e:
             print color.render_color('Error: ','error') , e
+        finally:
+            # 最后要回到程序的初始工作目录
+            os.chdir(current_local_path)
 
     def do_get(self, args):
         try:
@@ -114,9 +120,28 @@ class CLI(cmd.Cmd):
         else:
             print '\nEnjoy your day. Bye !'
             sys.exit(0)
+    
+    def do_bash(self, args='bash'):
+        '''run a bash shell environment'''
+        print ''
+        prompt = getpass.getuser()+'@'+socket.gethostname() + ' > '
+        prompt = color.render_color(prompt,'green')
+        while True:
+            command = raw_input(prompt)
+            if command:
+                if command == 'exit': 
+                    break
+                self.do_shell(command)
 
     def do_shell(self, args):
         """Run shell command. command begain with '!'. \n"""
+        if args.split()[0] == 'cd':
+            try:
+                os.chdir(args.split()[1])
+                print 'local  workspace changed !\n', os.path.abspath('.')
+            except OSError as e:
+                print color.render_color('Error: ','error') , e
+
         shell_cmd = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
         print shell_cmd.communicate()[0]
     
@@ -217,31 +242,39 @@ class CLI(cmd.Cmd):
         return names
 
     def action_put(self, args):
-        source_list = args.source
+        source_list = []
+        # 预先处理路径，解决使用 . 或 .. 时多返回一级目录的问题。
+        for path in args.source:
+            source_list.append(os.path.abspath(path))
+            
         destnation = args.destnation
+        self.put_files_count = 0
+        self.put_dirs_count = 0
         self.get_local_files(source_list)
-        self.count = 0
-    count = 0 
-    def get_local_files(self, source):
-        for source_path in source:
+        put_count_format = color.render_color('%s directories, ','purple') + color.render_color('%s files','green')
+        print put_count_format % (self.put_dirs_count, self.put_files_count)
+
+    def get_local_files(self, source_list=[]):
+        for source_path in source_list:
+            # 递归获取的文件列表是相对路径，这里需要再一次处理
             path = os.path.abspath(source_path) 
-           # print 'start path: '+ path +'  ', os.path.exists(path)
             if not os.path.exists(path):
+                print color.render_color(path+':','error')+'file not exits !'
                 pass
-                #print path+': file not exits !'
             else:
                 if os.path.isdir(path):
-                    file_list = os.listdir(path)
-                    print 'dir:',path
+                    print  color.render_color(path, 'blue')+':'
+                    self.put_dirs_count += 1
                     # enter sub dir 
                     os.chdir(path)
+                    file_list = os.listdir(path)
                     self.get_local_files(file_list)
                     # return to parent dir (necessary!)
                     os.chdir('..')
                 else:
-                    print 'file: '+path
-                    self.count += 1
-        print 'count:',self.count
+                    print color.render_color(path) 
+                    self.put_files_count += 1
+        
     
     def put_to_upyun(self, source, destnation):
         pass
