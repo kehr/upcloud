@@ -39,15 +39,14 @@ class upcloud():
         
 
 
-    def upload_files(self, src, des='/'):
+    def upload(self, src, des='/'):
 
-        print "Uploading a new object to UpYun from a file ..."
+        print "Uploading file ..."
        # headers = {"x-gmkerl-rotate": "180"}
         with open(src, 'rb') as f:
-            res = self.cloud.put(des+'imgs/Linux.png', f, checksum=False)
-        print "Uploaded"
+            res = self.cloud.put(des, f, checksum=False)
     
-    def download_files(self):
+    def download(self):
         print 'download files ...'
 
     def create_dir(self, path):

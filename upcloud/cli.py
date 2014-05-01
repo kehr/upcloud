@@ -13,6 +13,7 @@ import cmd
 import sys
 import color 
 import upyun
+import manual 
 import socket
 import getpass
 import argparse
@@ -20,20 +21,17 @@ import readline
 import subprocess
 from upcloud import upcloud
 from datetime import datetime
-from __init__ import __version__ as version
-
-__version__ = version 
 
 class CLI(cmd.Cmd):
 
     def __init__(self, prompt='>>> ',bucket=None, username=None, passwd=None, timeout=30, endpoint=upyun.ED_AUTO):
         cmd.Cmd.__init__(self)
-        self.intro = self.get_help_message()
+        self.intro = manual.get_tips()
         self.doc_header=color.render_color('All commands you can use (type help <command> get more info):')
         self.undoc_header=color.render_color('All alias command:')
         self.prompt = color.render_color(prompt,'blue')
         self.init_upcloud(bucket, username, passwd, timeout, endpoint)
-
+        self.current_local_workspace = os.path.abspath('.')
 
     # do_command methods ...
     def do_man(self,args):
@@ -65,6 +63,8 @@ class CLI(cmd.Cmd):
         finally:
             # 最后要回到程序的初始工作目录
             os.chdir(current_local_path)
+            # refresh the cache of current workspace
+            self.cloud.get_file_list(self.cloud.get_current_workspace())
 
     def do_get(self, args):
         try:
@@ -84,7 +84,7 @@ class CLI(cmd.Cmd):
         
     def do_pwd(self, args):
         if args.split():
-            self.show_help('pwd', args.split())
+            manual.get_manual('pwd', args.split())
         else:
             print self.cloud.get_current_workspace() + '\n'
 
@@ -112,11 +112,11 @@ class CLI(cmd.Cmd):
         elif not args:
             print 'Your space has been used: '+self.human_readable(self.cloud.get_usage_info())
         else:
-            self.show_help('usage','-h')
+            manual.get_manual('usage','-h')
 
     def do_exit(self, args):
         if args:
-            self.show_help('exit', args.split())
+            manual.get_manual('exit', args.split())
         else:
             print '\nEnjoy your day. Bye !'
             sys.exit(0)
@@ -135,10 +135,15 @@ class CLI(cmd.Cmd):
 
     def do_shell(self, args):
         """Run shell command. command begain with '!'. \n"""
-        if args.split()[0] == 'cd':
+        command = args.split()
+
+        if command[0] == 'cd':
             try:
-                os.chdir(args.split()[1])
-                print 'local  workspace changed !\n', os.path.abspath('.')
+                if len(command) == 1:
+                    os.chdir(self.current_local_workspace)
+                else:
+                    os.chdir(command[1])
+                print  os.path.abspath('.')
             except OSError as e:
                 print color.render_color('Error: ','error') , e
 
@@ -147,16 +152,16 @@ class CLI(cmd.Cmd):
     
     def do_clear(self, args):
         if args.split():
-            self.show_help('clear',args.split())
+            manual.get_manual('clear',args.split())
         else:
             shell_cmd = subprocess.Popen('clear', shell=True, stdout=subprocess.PIPE)
             print shell_cmd.communicate()[0]
     
     def action_man(self, args):
         if args.command == 'welcome':
-            print self.get_help_message()
+            print manual.get_tips()
         else:
-            self.show_help(args.command, '-h')
+            manual.get_manual(args.command, '-h')
 
     def action_ls(self, args):
         if type(args.path) is str:
@@ -178,12 +183,12 @@ class CLI(cmd.Cmd):
                 if args.list:
                     self.show_file_list(True, path)
                 else:
-                    self.show_file_list(path)
+                    self.show_file_list(False,path)
             else:
                 if args.list:
                     self.show_file_list(True, path)
                 else:
-                    self.show_file_list(path)
+                    self.show_file_list(False, path)
             
             if len(path_list) > 1: print ''
 
@@ -243,24 +248,29 @@ class CLI(cmd.Cmd):
 
     def action_put(self, args):
         source_list = []
+        destination = self.get_path(args.destination)
         # 预先处理路径，解决使用 . 或 .. 时多返回一级目录的问题。
         for path in args.source:
             source_list.append(os.path.abspath(path))
-            
-        destnation = args.destnation
+        level = args.level
+        print 'level:',level
         self.put_files_count = 0
         self.put_dirs_count = 0
-        self.get_local_files(source_list)
+        self.put_local_files(source_list, destination, level)
         put_count_format = color.render_color('%s directories, ','purple') + color.render_color('%s files','green')
-        print put_count_format % (self.put_dirs_count, self.put_files_count)
 
-    def get_local_files(self, source_list=[]):
+        print 'All files has been uploaded successfully! \n' + \
+                'count: '+put_count_format % (self.put_dirs_count, self.put_files_count)
+
+    def put_local_files(self, source_list=[], destination='/', level=0):
+        
+        des_pre = destination 
+         
         for source_path in source_list:
             # 递归获取的文件列表是相对路径，这里需要再一次处理
             path = os.path.abspath(source_path) 
             if not os.path.exists(path):
                 print color.render_color(path+':','error')+'file not exits !'
-                pass
             else:
                 if os.path.isdir(path):
                     print  color.render_color(path, 'blue')+':'
@@ -268,17 +278,20 @@ class CLI(cmd.Cmd):
                     # enter sub dir 
                     os.chdir(path)
                     file_list = os.listdir(path)
-                    self.get_local_files(file_list)
+                    self.put_local_files(file_list, des_pre, level)
                     # return to parent dir (necessary!)
                     os.chdir('..')
                 else:
-                    print color.render_color(path) 
+                    print color.render_color('from: ','purple') + path
+                    path_list = path.split('/')
+                    path_list.pop(0) # remove the begain space
+                    if level >= len(path_list):
+                        level = len(path_list) - 1
+                    destination = des_pre + '/'.join(path_list[level:]) 
+                    print color.render_color('to:   ','green') + destination 
+                    self.cloud.upload(path,destination)
                     self.put_files_count += 1
-        
-    
-    def put_to_upyun(self, source, destnation):
-        pass
-
+ 
     def action_get(self, args):
         pass
     
@@ -347,7 +360,7 @@ class CLI(cmd.Cmd):
                 self.cloud.get_file_list(self.cloud.get_current_workspace()) 
             except upyun.UpYunServiceException as e:
                 self.cloud.clear_file_list_cache()
-                print 'The current working directory is failure！Please return to / .'
+                print 'The current working directory is failure！'
 
     def recursive_rm(self,path):
         file_type = self.check_file(path)
@@ -372,95 +385,43 @@ class CLI(cmd.Cmd):
 
     # help_command methods ...
     def help_ls(self):
-        name = 'ls - list directory content'
-        synopsis = 'ls [-l | -d] [FILE]'
-        description = 'List information about the FILEs (the current directory by default).\n' + \
-                      '\n\tJust support short options now O(∩_∩)O !\n' + \
-                      '\n\t(usage example): ls\n'+\
-                      '\t\tlist current directory content.\n' + \
-                      '\n\t-d\n' + \
-                      '\t\tlist directory entries instead of contents.\n' + \
-                      '\n\t-l\n' + \
-                      '\t\tuse a long listing format.show file\'s detail information.'
-        self.format_helpinfo(name, synopsis, description)
+        manual.ls()
 
     def help_put(self):
-        name = 'put - put file to upyun'
-        synopsis = 'put [source] [destnation]'
-        description = '[source] is your local file\'s path\n' + \
-                      '\t[description] is upyun space\'s path\n' + \
-                      '\tThe [source] and [description] are support the absolute path and the relative path.\n' 
-        self.format_helpinfo(name, synopsis, description)
+        manual.put()
 
     def help_get(self):
-        name = 'get - download files from upyun'
-        synopsis = 'get [source] [description]'
-        description = '[source] is upyun space\'s path\n' + \
-                      '\t[description] is your local file\'s path\n' + \
-                      '\tThe [source] and [description] are support the absolute path and the relative path.\n' 
-        self.format_helpinfo(name, synopsis, description)
+        manual.get()
 
     def help_cd(self):
-        name = 'cd - switch your work space'
-        synopsis = 'cd [path]'
-        description = 'this commad will enter into / by default.\n' + \
-                      '\tThe [path]  support the absolute path and the relative path.\n' 
-        self.format_helpinfo(name, synopsis, description)
+        manual.cd()
 
     def help_pwd(self):
-        name = 'pwd - show your current work space'
-        synopsis = 'pwd'
-        description = 'No parameters'
-        self.format_helpinfo(name, synopsis, description)
+        manual.pwd()
 
     def help_mkdir(self):
-        name = 'mkdir - make directories'
-        synopsis = 'mkdir DIRECTORY...'
-        description = 'Create the DIRECTORYs, if they do not already exist.'
-        self.format_helpinfo(name, synopsis, description)
+        manual.mkdir()
 
     def help_cat(self):
-        name = 'cat - concatenate files and print on the standard output'
-        synopsis = 'cat FILE'
-        description = 'The parameter FILE  support the absolute path and the relative path.\n' 
-        self.format_helpinfo(name, synopsis, description)
+        manual.cat()
 
     def help_rm(self):
-        name = 'rm - remove files or directories'
-        synopsis = 'rm [FILEs OR DIRECTORYs PATH]'
-        description = 'support the absolute path and the relative path.\n'
-        self.format_helpinfo(name, synopsis, description)
+        manual.rm()
 
     def help_usage(self):
-        name = 'usage - show the use of information'
-        synopsis = 'usage'
-        description = 'No parameters'
-        self.format_helpinfo(name, synopsis, description)
+        manual.usage()
 
     def help_exit(self):
-        name = 'exit - exit program'
-        synopsis = 'exit'
-        description = 'No parameters'
-        self.format_helpinfo(name, synopsis, description)
-    
-        name = 'quit | q - exit program '
-    def help_quit(self):
-        synopsis = 'quit | q'
-        description = "The command 'quit' and 'q' have the same action as command 'exit'.\n" + \
-                      "\tplease run help exit see more info."
+        manual.exist()
 
-        self.format_helpinfo(name, synopsis, description)
+    def help_quit(self):
+        manual.quit()
 
     def help_help(self):
-        name = 'help - help you get more command usage'
-        synopsis = 'help [command]'
-        self.format_helpinfo(name, synopsis)
+        pass 
 
     def help_clear(self):
-        name = 'clear  - clear the terminal screen'
-        synopsis = 'clear'
-        description = 'clear has alias "cls" '
-        self.format_helpinfo(name, synopsis, description)
+        manual.clear()
 
 
     # overrid some methods ...
@@ -496,17 +457,6 @@ class CLI(cmd.Cmd):
             sys.exit(1)
         print '\n login sucess ! Have a nice day !'
 
-    def get_help_message(self):
-        intro='\n\tWelcome to use upcloud ! version: '+str(__version__)+'\n\n'+\
-               'You can use this tool to manage your remote space easily. Enjoy it !\n\n' + \
-               'Type "help" or "?" for help.\n' + \
-               'Type "-h" or "--help" behind a command for help.\n' + \
-               'Type double <Tab> key to get a command list.\n' + \
-               'Type "![command]" or "shell [command]" run a shell command. example: !ls\n' + \
-               'Type "cls" or "clear" to clear the terminal screen. \n' + \
-               'Type "man" show this message again.\n'
-        return intro
-
     def parse_cmdline(self, command, args):
         
         if type(args) is str:
@@ -541,16 +491,19 @@ class CLI(cmd.Cmd):
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
                 parser.add_argument('-s', '--source', nargs='+', required='True',
                         help='The file path of your local system')
-                parser.add_argument('-d', '--destnation', required='True', 
+                parser.add_argument('-d', '--destination', required='True', 
                         help='The file path of your bucket<UpYun space>')
+                parser.add_argument('-l', '--level', type=int, default=-1 ,
+                        help='remove The file path level(Support negative number), ' + \
+                             'begain with local path "/". save the name of files by dafaut')
                 args_list = parser.parse_args(args)
                 self.action_put(args_list)
             elif command == 'get':
-                parser = argparse.ArgumentParser(prog='man', add_help=True,
+                parser = argparse.ArgumentParser(prog='get', add_help=True,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
                 parser.add_argument('command', nargs='?', default='w',help='')
                 args_list = parser.parse_args(args)
-                self.action_man(args_list)
+                self.action_get(args_list)
             elif command == 'cd':
                 parser = argparse.ArgumentParser(prog='cd', add_help=False,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -559,7 +512,7 @@ class CLI(cmd.Cmd):
                 group.add_argument('-h', '--help', action='store_true', 
                         help='show this message and return.')
                 group.add_argument('path', nargs='?', default='/',
-                        help='Your destnation workspace')
+                        help='Your destination workspace')
                 arg_dict = parser.parse_args(args)
                 # 由于当参数出错时argparse会报错且退出程序，显然我并不需要在这里退出
                 # 解决：http://srackoverflow.com/questions/5943249
@@ -567,7 +520,6 @@ class CLI(cmd.Cmd):
                 #    arg_dict = parser.parse_args(args)
                 #except SystemExit:
                 #    print 'sucess'
-
                 self.action_cd(parser, arg_dict)
             elif command == 'mkdir':
                 parser = argparse.ArgumentParser(prog='mkdir', add_help=True,
@@ -578,11 +530,12 @@ class CLI(cmd.Cmd):
                 args_list = parser.parse_args(args)
                 self.action_mkdir(args_list)
             elif command == 'cat':
-                parser = argparse.ArgumentParser(prog='man', add_help=True,
+                parser = argparse.ArgumentParser(prog='cat', add_help=True,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-                parser.add_argument('command', nargs='?', default='w',help='')
+                parser.add_argument('-h', '--head', type=int, help='')
+                parser.add_argument('-t', '--tail', type=int, help='')
                 args_list = parser.parse_args(args)
-                self.action_man(args_list)
+                self.action_cat(args_list)
             elif command == 'rm' :
                 parser = argparse.ArgumentParser(prog='rm', add_help=True,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -600,52 +553,6 @@ class CLI(cmd.Cmd):
         except upyun.UpYunClientException as e:
             self.show_error(error='Client error', msg=e.msg)
 
-    def show_help(self, command, args):
-        if '-h' in args or '--help' in args:
-            if command == 'man':
-                print 'Type "man -h" for help'
-            elif command == 'ls':
-                self.help_ls()
-            elif command == 'put':
-                self.help_put()
-            elif command == 'get':
-                self.help_get()
-            elif command == 'cd':
-                self.help_cd()
-            elif command == 'pwd':
-                self.help_pwd()
-            elif command == 'mkdir':
-               self.help_mkdir()
-            elif command == 'cat':
-                self.help_cat()
-            elif command == 'rm' :
-                self.help_rm()
-            elif command == 'usage':
-                self.help_usage()
-            elif command == 'exit':
-                self.help_exit()
-            elif command == 'quit':
-                self.help_quit()
-            elif command == 'clear':
-                self.help_clear()
-            else:
-                self.command_not_found(command)
-
-    def handle_args(self,args):
-        arg_list = args.split()
-    #    for arg in arg_list:
-    #        print arg
-        return arg_list
-
-    def format_helpinfo(self,name='None', synopsis='None', description='None'):
-        info = 'NAME\n' + \
-               '\t' +name + '\n\n' + \
-               'SYNOPSIS\n' + \
-               '\t' + synopsis + '\n\n' + \
-               'DESCRIPTION\n' + \
-               '\t'+description 
-        print info
-    
     def get_path(self, path, sys=False):
         workspace = self.cloud.get_current_workspace()
         # format workspace
@@ -660,7 +567,6 @@ class CLI(cmd.Cmd):
         elif path.startswith('../'):
             path_list = path.split('/')
             if path_list[1] == '..':
-            #    print 'current version: %r not support this path.' % __version__
                 return workspace
             workspace = '/'.join(workspace.split('/')[:-2]) + '/'+'/'.join(path_list[1:])
         elif path.startswith('./'):
