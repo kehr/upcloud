@@ -505,7 +505,13 @@ class CLI(cmd.Cmd):
             elif command == 'get':
                 parser = argparse.ArgumentParser(prog='get', add_help=True,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-                parser.add_argument('command', nargs='?', default='w',help='')
+                parser.add_argument('-s', '--source', nargs='+', required='True',
+                        help='The file path of your bucket<UpYun space>')
+                parser.add_argument('-d', '--destination', required='True', 
+                        help='The file path of your local system')
+                parser.add_argument('-l', '--level', type=int, default=-1 ,
+                        help='remove The file path level(Support negative number), ' + \
+                             'begain with bucket path "/". save the name of files by dafaut')
                 args_list = parser.parse_args(args)
                 self.action_get(args_list)
             elif command == 'cd':
