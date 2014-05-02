@@ -66,16 +66,21 @@ class cmd_parser():
         prompt = self.args.username+'@'+self.args.bucket+' > ' 
         try:
             cli = CLI(prompt, bucket, username, passwd, timeout, endpoint)
-            cli.cmdloop()
-        except KeyboardInterrupt:
-            cli.do_exit('exit')
+            self.loop(cli)
         except upyun.UpYunServiceException as e:
             print color.render_color('Server error:','error'),e.msg
-            sys.exit(1)
         except upyun.UpYunClientException as e:
             print color.render_color('Client error:','error'),e.msg
-            sys.exit(1)
 
+    def loop(self,cli):
+        try:
+            cli.cmdloop()
+        except KeyboardInterrupt:
+            self.loop(cli)
+        except upyun.UpYunServiceException as e:
+            print color.render_color('Server error:','error'),e.msg
+        except upyun.UpYunClientException as e:
+            print color.render_color('Client error:','error'),e.msg
 
 def main():
     cmd_parser()

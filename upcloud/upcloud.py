@@ -8,7 +8,7 @@
 # @Copyright:    MIT applies
 # @Description:  Perform interactive command                   
 #########################################################################
-
+import os
 import upyun
 
 class upcloud():
@@ -40,46 +40,44 @@ class upcloud():
 
 
     def upload(self, src, des='/'):
-
         print "Uploading file ..."
        # headers = {"x-gmkerl-rotate": "180"}
         with open(src, 'rb') as f:
             res = self.cloud.put(des, f, checksum=False)
     
-    def download(self):
-        print 'download files ...'
+    def download(self, src, des):
+        print "Downloading file ..."
+        file_path = '/'.join(des.split('/')[:-1])
+        # 处理文件以/开头的情况
+        if file_path: 
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+        with open(des, 'wb') as f:
+            self.cloud.get(src, f)
+    
+    def cat(self, path):
+        cache_path = '/tmp/upcloud'
+        file_path = cache_path+'/'.join(path.split('/')[:-1])+'/'
+        file_name = '/'.join(path.split('/')[-1:])
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        else:
+            cache_file =  file_path + file_name 
+            if os.path.exists(cache_file) and not os.path.isdir(cache_file):
+                return cache_file
+            else:
+                with open(cache_file, 'wb') as f:
+                    self.cloud.get(path, f)
+                    return cache_file 
 
-    def create_dir(self, path):
+    def mkdir(self, path):
         print 'creating directory %s ...' % path
         self.cloud.mkdir(path)
 
-    def remove_files(self, path):
+    def remove(self, path):
         print 'removing file %s ...' % path[:-1]
         self.cloud.delete(path)
     
-    
-    def check_file(self,path):
-        '''if file not exit return None,else return file type.'''
-        if path == '/':
-            return 'folder'
-
-        name = ''
-        if path.endswith('/'):
-            name = ''.join(path.split('/')[-2:-1])
-        else:
-            name = ''.join(path.split('/')[-1:])
-        
-        
-        for info in self.filelist:
-            if info['name'] == name:
-                if info['type'] == 'F':
-                    return 'folder'
-                else:
-                    return 'file'
-                break
-        else:
-            return None
-
     def get_file_info(self, path):
         return self.cloud.getinfo(path)
     
@@ -96,15 +94,6 @@ class upcloud():
     def get_usage_info(self):
         return self.cloud.usage()
     
-    def get_abspath(self, path):
-        if path.startswith('/'):
-            return path
-        else:
-            if self.WORKSPACE.endswith('/'):
-                return self.WORKSPACE + path
-            else:
-                return self.WORKSPACE + '/' + path
-
     def swith_workspace(self, path):
         if path.startswith('/') and path.endswith('/'):
             dir_info = self.cloud.getinfo(path)
@@ -135,10 +124,6 @@ class upcloud():
         
         print info % (self.BUCKETNAME, self.USERNAME, self.TIMEOUT, self.ENDPOINT, self.WORKSPACE)
 
-    def help(self):
-        user_help = '----------------------------------------------\n' + \
-                    ''
-        pass
          
 if __name__ == '__main__':
     up = upcloud('kehrspace','kehr','kehr4444')

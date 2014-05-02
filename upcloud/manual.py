@@ -147,10 +147,11 @@ def format_helpinfo(name='None', synopsis='None', description='None'):
 def get_tips():
     intro='\n\tWelcome to use upcloud ! version: '+str(__version__)+'\n\n'+\
            'You can use this tool to manage your remote space easily. Enjoy it !\n\n' + \
+           'Type "man" show this message again.\n' + \
            'Type "help" or "?" for help.\n' + \
            'Type "-h" or "--help" behind a command for help.\n' + \
-           'Type double <Tab> key to get a command list.\n' + \
            'Type "![command]" or "shell [command]" run a shell command. example: !ls\n' + \
+           'Type "bash" enter the local bash environment. \n' + \
            'Type "cls" or "clear" to clear the terminal screen. \n' + \
-           'Type "man" show this message again.\n'
+           'Type double <Tab> key to get a command list.\n' 
     return intro

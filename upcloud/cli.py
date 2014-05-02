@@ -37,7 +37,7 @@ class CLI(cmd.Cmd):
     def do_man(self,args):
         '''Show the detail message of command.'''
         try:
-            self.parse_cmdline('man', args)
+            self.cmdline('man', args)
         except SystemExit:
             pass
     
@@ -48,14 +48,14 @@ class CLI(cmd.Cmd):
             print 'Type "ls -h" for help.'
     def do_ls(self, args):
         try:
-            self.parse_cmdline('ls', args)
+            self.cmdline('ls', args)
         except SystemExit:
             print 'Type "ls -h" for help.'
 
     def do_put(self, args):
         try:
             current_local_path = os.path.abspath('.')
-            self.parse_cmdline('put', args)
+            self.cmdline('put', args)
         except SystemExit:
             print 'Type "put -h" for help.'
         except OSError as e:
@@ -68,13 +68,18 @@ class CLI(cmd.Cmd):
 
     def do_get(self, args):
         try:
-            self.parse_cmdline('get', args)
+            current_upyun_workspace = self.cloud.get_current_workspace()
+            self.cmdline('get', args)
         except SystemExit:
             print 'Type "get -h" for help.'
+        except OSError as e:
+            print color.render_color('Error: ','error') , e
+        finally:
+            self.cloud.swith_workspace(current_upyun_workspace)
 
     def do_cd(self, args):
         try:
-            self.parse_cmdline('cd', args)
+            self.cmdline('cd', args)
         except SystemExit:
             print 'Type "cd -h" for help.'
         except upyun.UpYunServiceException as e:
@@ -90,27 +95,27 @@ class CLI(cmd.Cmd):
 
     def do_mkdir(self, args):
         try:
-            self.parse_cmdline('mkdir', args)
+            self.cmdline('mkdir', args)
         except SystemExit:
             print 'Type "mkdir -h" for help.'
 
     def do_cat(self, args):
         try:
-            self.parse_cmdline('cat', args)
+            self.cmdline('cat', args)
         except SystemExit:
             print 'Type "cat -h" for help.'
 
     def do_rm(self, args):
         try:
-            self.parse_cmdline('rm', args)
+            self.cmdline('rm', args)
         except SystemExit:
             print 'Type "rm -h" for help.'
 
     def do_usage(self, args='none'):
         if args == 'none':
-            return self.human_readable(self.cloud.get_usage_info())
+            return self.readable(self.cloud.get_usage_info())
         elif not args:
-            print 'Your space has been used: '+self.human_readable(self.cloud.get_usage_info())
+            print 'Your space has been used: '+self.readable(self.cloud.get_usage_info())
         else:
             manual.get_manual('usage','-h')
 
@@ -180,7 +185,7 @@ class CLI(cmd.Cmd):
             path_list = self.show_file_list(None,self.cloud.get_current_workspace())
 
         for path in path_list:
-            path = self.get_path(path)
+            path = self.abspath(path)
             print color.render_color(path,'path')+':'
 
             if args.directory:
@@ -215,7 +220,7 @@ class CLI(cmd.Cmd):
         for info in info_list:
             info_time = datetime.fromtimestamp(int(info['time']))
             info_type = info['type']
-            info_size =  self.human_readable(info['size'])
+            info_size =  self.readable(info['size'])
             info_name = info['name']
             info_format = normal_format
 
@@ -252,7 +257,7 @@ class CLI(cmd.Cmd):
 
     def action_put(self, args):
         source_list = []
-        destination = self.get_path(args.destination)
+        destination = self.abspath(args.destination)
         # 预先处理路径，解决使用 . 或 .. 时多返回一级目录的问题。
         for path in args.source:
             source_list.append(os.path.abspath(path))
@@ -263,7 +268,10 @@ class CLI(cmd.Cmd):
         self.put_local_files(source_list, destination, level)
         put_count_format = color.render_color('%s directories, ','purple') + color.render_color('%s files','green')
 
-        print 'All files has been uploaded successfully! \n' + \
+        if self.put_files_count == 0:
+            print 'The upload folder is empty. Did not upload any file !'
+            return 
+        print 'All files uploaded successfully! \n' + \
                 'count: '+put_count_format % (self.put_dirs_count, self.put_files_count)
 
     def put_local_files(self, source_list=[], destination='/', level=0):
@@ -297,44 +305,95 @@ class CLI(cmd.Cmd):
                     self.put_files_count += 1
  
     def action_get(self, args):
-        pass
+        source_list = args.source 
+        destination = os.path.abspath(args.destination)
+        if not os.path.exists(destination):
+            print color.render_color('Error: ','error') + 'The local folder does not exist !'
+            flag = raw_input('Do you want to create it now?(y/n):')
+            if flag == 'y':
+                os.makedirs(destination)
+            else:
+                return 
+        level = args.level
+        print 'level:',level
+        self.get_files_count = 0
+        self.get_dirs_count = 0
+        self.get_upyun_files(source_list, destination, level)
+        if self.get_files_count == 0:
+            print 'The download folder is empty. Did not download any file !'
+            return 
+        get_count_format = color.render_color('%s directories, ','purple') + color.render_color('%s files','green')
+        print 'All files download successfully! \n' + \
+                'count: '+get_count_format % (self.get_dirs_count, self.get_files_count)
     
+    def get_upyun_files(self, source_list=[], destination='/tmp/', level=0):
+        if not destination.endswith('/'):
+            des_pre = destination + '/'
+        else:
+            des_pre = destination 
+         
+        for source_path in source_list:
+            path = self.abspath(source_path) 
+            check_file = self.check(path)
+            if not check_file:
+                print color.render_color(path+':','error')+'file not exits !'
+            else:
+                if check_file == 'folder':
+                    print  color.render_color(path, 'blue')+':'
+                    self.get_dirs_count += 1
+                    # enter sub dir 
+                    self.cloud.swith_workspace(path)
+                    file_list = self.show_file_list(True,path)
+                    self.get_upyun_files(file_list, des_pre, level)
+                    # return to parent dir (necessary!)
+                    self.cloud.swith_workspace(self.abspath('..'))
+                else:
+                    print color.render_color('from: ','purple') + path[:-1]
+                    path_list = path.split('/')
+                    path_list.pop(0) # remove the begain space
+                    if level >= len(path_list):
+                        level = len(path_list) - 1
+                    destination = des_pre + '/'.join(path_list[level:]) 
+                    print color.render_color('to:   ','green') + destination[:-1] 
+                    self.cloud.download(path[:-1], destination[:-1])
+                    self.get_files_count += 1
+
     def action_cd(self, parser, args):
         if args.help:
             parser.print_help()
         if not args.path:
             return
-        workspace = self.get_path(args.path)
+        workspace = self.abspath(args.path)
         self.cloud.swith_workspace(workspace)
         print self.cloud.get_current_workspace() + '\n'
 
     def action_mkdir(self, args):
         for directory in args.path:
-            directory = self.get_path(directory)
+            directory = self.abspath(directory)
             if args.parents:
                 print 'recursive create the directory: %s' % directory
                 dir_list = directory.split('/')[1:-1]
                 # 先检查第一级目录
-                parent_dir = self.get_path(dir_list[0])
-                file_type = self.check_file(parent_dir)
+                parent_dir = self.abspath(dir_list[0])
+                file_type = self.check(parent_dir)
                 if not file_type:
-                    self.cloud.create_dir(parent_dir)
+                    self.cloud.mkdir(parent_dir)
                 # 如果目录只有一级直接返回
                 if len(dir_list) == 1: continue
 
                 for dir_name in dir_list[1:]:
                     parent_dir += dir_name + '/'
-                    file_type = self.check_file(parent_dir)
+                    file_type = self.check(parent_dir)
                     if not file_type:  #文件不存在
-                        self.cloud.create_dir(parent_dir)
+                        self.cloud.mkdir(parent_dir)
             else:
-                self.cloud.create_dir(directory)
+                self.cloud.mkdir(directory)
         else:
             print 'All the files to create success!'
             # refresh current workspace cache 
             self.cloud.get_file_list(self.cloud.get_current_workspace()) 
     
-    def check_file(self, path):
+    def check(self, path):
         '''check the file exits.if the file exits,returns the file type else returns False'''
         info = {}
         try:
@@ -346,17 +405,37 @@ class CLI(cmd.Cmd):
         return info['file-type']
 
     def action_cat(self, args):
-        pass
+        file_path = self.abspath(args.file)
+        file_type = self.check(file_path)
+        if file_type and file_type == 'folder':
+            print self.show_error(file_path+' is directory !')
+            return
+        else:
+            local_file = self.cloud.cat(file_path[:-1])
+            if not local_file:
+                print self.show_error('File not exists !')
+                return
+            
+            print ''
+            if  args.tail:
+                command = 'tail -n '+str(args.tail)+' '+local_file + ' | cat -n'
+                self.do_shell(command)
+                return 
+            if  args.number:
+                command = 'head -n '+str(args.number)+' '+local_file+' | cat -n' 
+            else:
+                command = 'cat '+local_file + ' | cat -n'
+            self.do_shell(command)
 
     def action_rm(self, args):
         for directory in args.path:
-            directory = self.get_path(directory)
+            directory = self.abspath(directory)
             if args.recursive:
                 print 'Recursive delete the directory: %s' % directory
                 self.recursive_rm(directory)
-                self.cloud.remove_files(directory)
+                self.cloud.remove(directory)
             else:
-                self.cloud.remove_files(directory)
+                self.cloud.remove(directory)
         else:
             print 'All files deleted successfully!'
             # refresh current workspace cache 
@@ -367,7 +446,7 @@ class CLI(cmd.Cmd):
                 print 'The current working directory is failure！'
 
     def recursive_rm(self,path):
-        file_type = self.check_file(path)
+        file_type = self.check(path)
         if not file_type:
             msg = 'file not exits !'
             self.show_error(msg)
@@ -379,11 +458,11 @@ class CLI(cmd.Cmd):
             for file_name in file_list:
                 print 'removing '+color.render_color(path,'blue') +': '
                 sub_path = path + file_name+'/'
-                if self.check_file(sub_path) == 'folder':
+                if self.check(sub_path) == 'folder':
                     self.recursive_rm(sub_path)
-                    self.cloud.remove_files(sub_path)
+                    self.cloud.remove(sub_path)
                 else:
-                    self.cloud.remove_files(sub_path)
+                    self.cloud.remove(sub_path)
             else:
                 print 'sucess !'
 
@@ -436,9 +515,10 @@ class CLI(cmd.Cmd):
 
     def default(self, command):
         if command == 'EOF':
-            self.do_exit('')
-        
-        self.command_not_found(command)
+           # self.do_exit('')
+           print ''
+        else:
+            self.command_not_found(command)
 
     # some extend methods ...
     def init_upcloud(self, bucket, username, passwd, timeout, endpoint):
@@ -451,7 +531,7 @@ class CLI(cmd.Cmd):
         except upyun.UpYunServiceException as e:
            # print "HTTP Status: " + str(e.status)
             self.show_error(error='Server error',msg=e.msg)
-            print 'login failed ! please check your login info.'
+            print 'login failed ! please check your login information.'
             sys.exit(1)
         except upyun.UpYunClientException as e:
             self.show_error(error='Client error',msg=e.msg)
@@ -461,8 +541,7 @@ class CLI(cmd.Cmd):
             sys.exit(1)
         print '\n login sucess ! Have a nice day !'
 
-    def parse_cmdline(self, command, args):
-        
+    def cmdline(self, command, args):
         if type(args) is str:
             args = args.split()
         else:
@@ -495,9 +574,9 @@ class CLI(cmd.Cmd):
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
                 parser.add_argument('-s', '--source', nargs='+', required='True',
                         help='The file path of your local system')
-                parser.add_argument('-d', '--destination', required='True', 
+                parser.add_argument('-d', '--destination', default='/', 
                         help='The file path of your bucket<UpYun space>')
-                parser.add_argument('-l', '--level', type=int, default=-1 ,
+                parser.add_argument('-l', '--level', type=int, default=0 ,
                         help='remove The file path level(Support negative number), ' + \
                              'begain with local path "/". save the name of files by dafaut')
                 args_list = parser.parse_args(args)
@@ -507,10 +586,10 @@ class CLI(cmd.Cmd):
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
                 parser.add_argument('-s', '--source', nargs='+', required='True',
                         help='The file path of your bucket<UpYun space>')
-                parser.add_argument('-d', '--destination', required='True', 
+                parser.add_argument('-d', '--destination', default='.',
                         help='The file path of your local system')
-                parser.add_argument('-l', '--level', type=int, default=-1 ,
-                        help='remove The file path level(Support negative number), ' + \
+                parser.add_argument('-l', '--level', type=int, default=0 ,
+                        help='Remove The file path level(Support negative number),' + \
                              'begain with bucket path "/". save the name of files by dafaut')
                 args_list = parser.parse_args(args)
                 self.action_get(args_list)
@@ -542,8 +621,10 @@ class CLI(cmd.Cmd):
             elif command == 'cat':
                 parser = argparse.ArgumentParser(prog='cat', add_help=True,
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-                parser.add_argument('-h', '--head', type=int, help='')
-                parser.add_argument('-t', '--tail', type=int, help='')
+                parser.add_argument('file',  metavar='FILE', help='The file path that you want to see')
+                group = parser.add_mutually_exclusive_group()
+                group.add_argument('-n', '--number', type=int, help='Get first N rows content file')
+                group.add_argument('-t', '--tail', type=int,  help='N lines after access to files')
                 args_list = parser.parse_args(args)
                 self.action_cat(args_list)
             elif command == 'rm' :
@@ -563,7 +644,7 @@ class CLI(cmd.Cmd):
         except upyun.UpYunClientException as e:
             self.show_error(error='Client error', msg=e.msg)
 
-    def get_path(self, path, sys=False):
+    def abspath(self, path, sys=False):
         workspace = self.cloud.get_current_workspace()
         # format workspace
         if not workspace.endswith('/'):
@@ -592,7 +673,7 @@ class CLI(cmd.Cmd):
             workspace += '/'
         return workspace
 
-    def  human_readable(self, usage):
+    def  readable(self, usage):
         '''format usage to human readable'''
         usage = int(usage)
         if usage == 0: return '0B'
@@ -618,12 +699,15 @@ class CLI(cmd.Cmd):
     #help_q = help_quit
     #help_cls = help_clear
 
-if __name__ == '__main__':
-    import upyun
+def main():
     cli = CLI(username='kehr',passwd='kehr4444',bucket='kehrspace',timeout=30,endpoint=upyun.ED_AUTO)
     try:
         cli.cmdloop()
     except KeyboardInterrupt:
         print color.render_color('\nWarning: operation was interrupted by user !')
+        main()
     except SystemExit:
         pass 
+
+if __name__ == '__main__':
+    main()
