@@ -9,7 +9,7 @@
 #########################################################################
 
 __version__ = '0.1.3'
-__author__  = 'kehr (wang kaixuan)'
+__author__  = 'kehr (kaixuan wang)'
 __mail__    = 'kehr.china@gmail.com'
 __license__ = 'MIT License: http://opensource.org/licenses/MIT'
-__all__ = ['cli','upcloud']    
+__all__ = ['cli','upcloud','color','manual']    
