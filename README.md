@@ -19,17 +19,17 @@
 ```bash
 sudo pip install upcloud
 ```
-该项目正在开发，目前发布版本是`v0.1.2 alpha`。最新版本会修复bug，完善命令功能，更加易用。  
-你可以使用`sudo pip install upcloud --upgrade`升级你当前使用的版本（强烈建议！）  
+该项目正在开发，目前发布版本是`v0.1.3 alpha`。最新版本会修复bug，完善命令功能，更加易用。  
+你可以使用`sudo pip install upcloud --upgrade`升级你当前使用的版本（ **强烈建议！**）  
 
-即将发布`v0.1.3 alpha`版本，该版本完成所有命令功能，支持基本帮助文档。详细帮助文档会在后续版本中完善。
+`v0.1.3 alpha`版本已发布，该版本完成所有命令功能，支持基本帮助文档。详细帮助文档会在后续版本中完善。
 
 感谢你的支持！欢迎提出你的意见和想法。
 
 ##使用 
 
 ```bash
-upcloud -b BUCKET -u USERNAME -p PASSWD
+upcloud -b BUCKET -u USERNAME -p
 ```
 获取命令帮助:`command [-h|--help]`  
 获取详细说明:`man [command]`
@@ -59,6 +59,7 @@ upcloud -b BUCKET -u USERNAME -p PASSWD
 正在实现，当前目录下文件名自动补全。这个我觉得比较给力～
 
 ##History:  
+2014-5-03 发布0.1.3 alpha,优化部分代码   
 2014-5-02 完成所有命令   
 2014-5-01 完成put命令批量上传，重构部分代码。  
 2014-4-30 完成参数解析和90%命令的实现。  
@@ -71,4 +72,7 @@ upcloud -b BUCKET -u USERNAME -p PASSWD
 1. 测试和重构代码  
 2. 完善帮助文档
 
-(P.S. 又拍云的SDK用起来真不好受::cry::)   
+(P.S. 又拍云的SDK用起来真不好受:cry:)   
+
+发现Python sdk bug一枚！当网络连接到需要认证的无线网络时，usage的返回值是网页内容，这显然是不合理的。  
+做sdk的小伙伴一定要注意一下O(∩_∩)O哈！  
