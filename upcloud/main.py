@@ -36,7 +36,7 @@ class cmd_parser():
             help='The name of your bucket')
         self.parser.add_argument('-u', '--username', required=True, type=str, 
             help='The operator\'s name of this bucket')
-        self.parser.add_argument('-p', '--passwd', action='store_true',
+        self.parser.add_argument('-p', '--passwd', action='store_true',required=True,
             help='The operator\'s password of this bucket')
         self.parser.add_argument('-t', '--timeout',default=30, type=int,
             help='The HTTP request timeout time')
