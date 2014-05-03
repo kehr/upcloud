@@ -11,6 +11,7 @@
 import sys
 import color 
 import upyun
+import getpass
 import argparse
 from cli import CLI
 from upcloud import upcloud
@@ -25,7 +26,7 @@ class cmd_parser():
         self.handle_args() 
         
     def parse_args(self):
-        client_name = color.render_color('upcloud','red')
+        client_name = color.render_color('upcloud','green')
         client_des = color.render_color(' Remote terminal management client for UpYun !', 'yellow')
         self.parser = argparse.ArgumentParser(prog=client_name,
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -35,7 +36,7 @@ class cmd_parser():
             help='The name of your bucket')
         self.parser.add_argument('-u', '--username', required=True, type=str, 
             help='The operator\'s name of this bucket')
-        self.parser.add_argument('-p', '--passwd', required=True, type=str,
+        self.parser.add_argument('-p', '--passwd', action='store_true',
             help='The operator\'s password of this bucket')
         self.parser.add_argument('-t', '--timeout',default=30, type=int,
             help='The HTTP request timeout time')
@@ -44,9 +45,17 @@ class cmd_parser():
         self.args = self.parser.parse_args()
       
     def handle_args(self):
-        bucket   = self.args.bucket
         username = self.args.username
-        passwd   = self.args.passwd
+        if self.args.passwd:
+            while True:
+                passwd = getpass.getpass('Password %s:'%username)
+                if not  passwd == '': break
+        else:
+           # self.parser.print_help()
+            self.parser.print_usage()
+            print 'Type "upcloud -h" get more information.'
+            return 
+        bucket   = self.args.bucket
         timeout = self.args.timeout
         endpoint = self.handle_endpoint(self.args.endpoint)
         self.handle_jobs(bucket, username, passwd, timeout, endpoint)
@@ -64,26 +73,26 @@ class cmd_parser():
           
     def handle_jobs(self, bucket, username, passwd, timeout=30, endpoint=upyun.ED_AUTO):
         prompt = self.args.username+'@'+self.args.bucket+' > ' 
-        try:
-            cli = CLI(prompt, bucket, username, passwd, timeout, endpoint)
-            self.loop(cli)
-        except upyun.UpYunServiceException as e:
-            print color.render_color('Server error:','error'),e.msg
-        except upyun.UpYunClientException as e:
-            print color.render_color('Client error:','error'),e.msg
+        cli = CLI(prompt, bucket, username, passwd, timeout, endpoint)
+        self.loop(cli)
 
     def loop(self,cli):
         try:
             cli.cmdloop()
         except KeyboardInterrupt:
             self.loop(cli)
-        except upyun.UpYunServiceException as e:
-            print color.render_color('Server error:','error'),e.msg
-        except upyun.UpYunClientException as e:
-            print color.render_color('Client error:','error'),e.msg
 
 def main():
-    cmd_parser()
+    try:
+        cmd_parser()
+    except KeyboardInterrupt:
+        print '\nexit !'
+    except EOFError:
+        print '\nexit !'
+    except upyun.UpYunServiceException as e:
+        print color.render_color('Server error:','error'),e.msg
+    except upyun.UpYunClientException as e:
+        print color.render_color('Client error:','error'),e.msg
  
 if __name__ == '__main__':
     main()

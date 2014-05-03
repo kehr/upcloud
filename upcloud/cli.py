@@ -128,15 +128,16 @@ class CLI(cmd.Cmd):
     
     def do_bash(self, args='bash'):
         '''run a bash shell environment'''
-        print ''
-        prompt = getpass.getuser()+'@'+socket.gethostname() + ' > '
-        prompt = color.render_color(prompt,'green')
-        while True:
-            command = raw_input(prompt)
-            if command:
-                if command == 'exit': 
-                    break
-                self.do_shell(command)
+       #print ''
+       #prompt = getpass.getuser()+'@'+socket.gethostname() + ' > '
+       #prompt = color.render_color(prompt,'green')
+       #while True:
+       #    command = raw_input(prompt)
+       #    if command:
+       #        if command == 'exit': 
+       #            break
+       #        self.do_shell(command)
+        subprocess.call(os.getenv('SHELL'))
 
     def do_shell(self, args):
         """Run shell command. command begain with '!'. \n"""
@@ -150,7 +151,6 @@ class CLI(cmd.Cmd):
                 if len(command) == 1:
                     os.chdir(self.current_local_workspace)
                 else:
-                    
                     os.chdir(os.path.abspath(command[1]))
                 print  os.path.abspath('.')
             except OSError as e:
@@ -240,8 +240,8 @@ class CLI(cmd.Cmd):
             name_list.append({info_name:info_type})
 
         name_list.sort()
-        name_dir_format = color.render_color('%s  ', 'blue')
-        name_file_format = color.render_color('%s  ', 'yellow')
+        name_dir_format = color.render_color('%-s', 'blue')
+        name_file_format = color.render_color('%-s', 'yellow')
 
         if not flag: 
             for name in name_list:
@@ -348,14 +348,15 @@ class CLI(cmd.Cmd):
                     # return to parent dir (necessary!)
                     self.cloud.swith_workspace(self.abspath('..'))
                 else:
-                    print color.render_color('from: ','purple') + path[:-1]
+                    path = path[:-1] #去掉末尾的'/'
+                    print color.render_color('from: ','purple') + path
                     path_list = path.split('/')
                     path_list.pop(0) # remove the begain space
                     if level >= len(path_list):
                         level = len(path_list) - 1
                     destination = des_pre + '/'.join(path_list[level:]) 
-                    print color.render_color('to:   ','green') + destination[:-1] 
-                    self.cloud.download(path[:-1], destination[:-1])
+                    print color.render_color('to:   ','green') + destination 
+                    self.cloud.download(path, destination)
                     self.get_files_count += 1
 
     def action_cd(self, parser, args):
@@ -413,6 +414,7 @@ class CLI(cmd.Cmd):
         else:
             local_file = self.cloud.cat(file_path[:-1])
             if not local_file:
+                print local_file
                 print self.show_error('File not exists !')
                 return
             
@@ -516,7 +518,9 @@ class CLI(cmd.Cmd):
     def default(self, command):
         if command == 'EOF':
            # self.do_exit('')
-           print ''
+           flag = raw_input('\nDo you really want to exit?(y/n):')
+           if flag == 'y':
+               sys.exit(0)
         else:
             self.command_not_found(command)
 
@@ -675,6 +679,9 @@ class CLI(cmd.Cmd):
 
     def  readable(self, usage):
         '''format usage to human readable'''
+        # 又拍云SDK BUG，如果连接cmcc，请求回来的是认证页面
+        if '<html>' in usage:
+            raise upyun.UpYunClientException('Unable to connect to the network!')
         usage = int(usage)
         if usage == 0: return '0B'
         level = [1.0 * 1024 ** n for n in xrange(6)]
