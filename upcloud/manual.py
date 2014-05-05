@@ -44,27 +44,38 @@ def get():
 
 def cd():
     name = 'cd - switch your work space'
-    synopsis = 'cd [path]'
-    description = 'this commad will enter into / by default.\n' + \
-                  '\tThe [path]  support the absolute path and the relative path.\n' 
+    synopsis = 'cd PATH'
+    description = 'This commad will enter into / by default.\n' + \
+                  '\t1. The [path]  support the absolute path and the relative path.\n' + \
+                  '\t2. You can type "cd .." return to parent directory.\n' 
     format_helpinfo(name, synopsis, description)
 
 def pwd():
     name = 'pwd - show your current work space'
     synopsis = 'pwd'
-    description = 'No parameters'
+    description = 'Print your current workspace of upyun with No parameters'
     format_helpinfo(name, synopsis, description)
 
 def mkdir():
     name = 'mkdir - make directories'
-    synopsis = 'mkdir DIRECTORY...'
-    description = 'Create the DIRECTORYs, if they do not already exist.'
+    synopsis = 'mkdir DIRECTORY ...'
+    description = 'Create the DIRECTORYs, if they do not already exist.\n' +\
+                  '\t1. You can use the -p parameter to create multiple directories.\n ' +\
+                  '\t   example: mkdir -p /a/b/c/d\n' + \
+                  '\t2. The mkdir will create folders in the current directory by default.\n' + \
+                  '\t   example: mkdir dir1 dir2 ...'
     format_helpinfo(name, synopsis, description)
 
 def cat():
-    name = 'cat - concatenate files and print on the standard output'
-    synopsis = 'cat FILE'
-    description = 'The parameter FILE  support the absolute path and the relative path.\n' 
+    name = 'cat - view the online file content'
+    synopsis = 'cat [OPTION] FILE'
+    description = 'The parameter FILE  support the absolute path and the relative path.\n' + \
+                  '\t1. -n, View the first n line of the  file. As the head command.\n' + \
+                  '\t   example: cat -n 10 test_file \n' + \
+                  '\t2. -t, View the After n line of the file. As the tail command. \n' + \
+                  '\t   example: cat -t 10 test_file \n' + \
+                  '\t3. View all content of the file by default.\n' + \
+                  '\t   example: cat test_file\n'
     format_helpinfo(name, synopsis, description)
 
 def rm():

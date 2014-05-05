@@ -707,7 +707,7 @@ class CLI(cmd.Cmd):
     #help_cls = help_clear
 
 def main():
-    cli = CLI(username='kehr',passwd='kehr4444',bucket='kehrspace',timeout=30,endpoint=upyun.ED_AUTO)
+    cli = CLI(username='test01',passwd='testtest',bucket='kehrspace',timeout=30,endpoint=upyun.ED_AUTO)
     try:
         cli.cmdloop()
     except KeyboardInterrupt:

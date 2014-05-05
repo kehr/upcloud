@@ -127,8 +127,5 @@ class upcloud():
          
 if __name__ == '__main__':
     up = upcloud('kehrspace','kehr','kehr4444')
- #   up.connect_upyun()
-  #  up.upload_files('/home/kehr/Github/upcloud/test/img/unix.png')
-   # print up.get_usage_info()
     print up.get_file_info('/a/b/c/d/')
     print up.get_file_info('/a/')
