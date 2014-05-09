@@ -48,7 +48,7 @@ class cmd_parser():
         username = self.args.username
         if self.args.passwd:
             while True:
-                passwd = getpass.getpass('Password %s:'%username)
+                passwd = getpass.getpass('Password for %s:'%username)
                 if not  passwd == '': break
         else:
            # self.parser.print_help()

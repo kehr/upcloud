@@ -14,7 +14,6 @@ import sys
 import color 
 import upyun
 import manual 
-import socket
 import getpass
 import argparse
 import readline
@@ -128,15 +127,6 @@ class CLI(cmd.Cmd):
     
     def do_bash(self, args='bash'):
         '''run a bash shell environment'''
-       #print ''
-       #prompt = getpass.getuser()+'@'+socket.gethostname() + ' > '
-       #prompt = color.render_color(prompt,'green')
-       #while True:
-       #    command = raw_input(prompt)
-       #    if command:
-       #        if command == 'exit': 
-       #            break
-       #        self.do_shell(command)
         subprocess.call(os.getenv('SHELL'))
 
     def do_shell(self, args):
@@ -186,22 +176,54 @@ class CLI(cmd.Cmd):
 
         for path in path_list:
             path = self.abspath(path)
-            print color.render_color(path,'path')+':'
-
-            if args.directory:
-                if args.list:
-                    self.show_file_list(True, path)
-                else:
-                    self.show_file_list(False,path)
-            else:
-                if args.list:
-                    self.show_file_list(True, path)
-                else:
-                    self.show_file_list(False, path)
             
-            if len(path_list) > 1: print ''
+            if args.directory:
+                if args.long:
+                    self.show_file_info(True, path)
+                else:
+                    self.show_file_info(False, path)
+            else:
+                if args.long:
+                    if self.check(path) == 'folder':
+                        print color.render_color(path,'path')+':'
+                        self.show_file_list(True, path)
+                    else:
+                        self.show_file_info(True, path)
+                else:
+                    if self.check(path) == 'folder':
+                        print color.render_color(path,'path')+':'
+                        self.show_file_list(False, path)
+                    else:
+                        self.show_file_info(False, path)
+            
+           # if len(path_list) > 1: print ''
 
-    
+    def show_file_info(self, flag=False, filepath='/'):
+        filepath = self.abspath(filepath)
+        info = self.cloud.get_file_info(filepath)
+        color_format = '%s  '+color.render_color('%-6s','purple')+'  %9s  '+color.render_color('%-s','blue')
+        normal_format = '%s  '+color.render_color('%-6s','green')+'  %9s  '+color.render_color('%-s','yellow')
+        
+        info_type = info['file-type']
+        info_name = ''.join(filepath.split('/')[-2:])
+        info_format = normal_format
+        if filepath == '/':
+            info_time = 'None'
+            info_name = '/'
+        else:
+            info_time = datetime.fromtimestamp(int(info['file-date']))
+        if info['file-type'] == 'folder':
+            info_type = '<dir>'
+            info_format = color_format
+            info_size = ''
+        else:
+            info_type = '<file>'
+            info_size =  self.readable(info['file-size'])
+        if flag:
+            print info_format % (info_time, info_type, info_size, info_name)
+        else:
+            print info_format[-14:] % (info_name)
+
     def show_file_list(self, flag=False, path='/'):
         '''when flag is True or Flase,print long info or short info.
            when flag is None, return a name list of current workspace.
@@ -252,7 +274,7 @@ class CLI(cmd.Cmd):
             print ''
         count_format = color.render_color('\n%d directories', 'purple') + ',' + color.render_color(' %d files', 'green')
         print count_format % (dir_num, file_num)
-
+        
         return names
 
     def action_put(self, args):
@@ -396,6 +418,15 @@ class CLI(cmd.Cmd):
     
     def check(self, path):
         '''check the file exits.if the file exits,returns the file type else returns False'''
+     
+        if path == self.cloud.get_current_workspace():
+            return 'folder'
+        for fileinfo in self.cloud.filelist:
+            if path == self.abspath(fileinfo['name']):
+                if fileinfo['type'] == 'F':
+                    return 'folder'
+                else:
+                    return 'file'
         info = {}
         try:
             info = self.cloud.get_file_info(path)
@@ -466,7 +497,15 @@ class CLI(cmd.Cmd):
                 else:
                     self.cloud.remove(sub_path)
             else:
-                print 'sucess !'
+                print 'sucess!'
+
+    #Auto completion setting
+    def complete_ls(self, text, line, begidx, endidx):
+        return [name for name in self.cloud.file_name_cache if name.startswith(text)]
+    
+    def complete_man(self, text, line, begidx, endidx):
+        commands =  ['put','get','mkdir','cd','ls','rm','pwd','clear','cat','usage','exit','quit','help']
+        return [name for name in commands if name.startswith(text)]
 
     # help_command methods ...
     def help_ls(self):
@@ -565,7 +604,7 @@ class CLI(cmd.Cmd):
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
                 parser.add_argument('path', nargs='*', default=self.cloud.get_current_workspace(),
                         help='the directory path that you want to see') 
-                parser.add_argument('-l', '--list', action='store_true',
+                parser.add_argument('-l', '--long', action='store_true',
                         help='use a long listing format')
                 parser.add_argument('-d', '--directory',action='store_true', 
                         help='list directory entries instead of contents')
@@ -636,8 +675,8 @@ class CLI(cmd.Cmd):
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
                 parser.add_argument('-r', '--recursive', action='store_true', 
                         help='remove directories and their contents recursively')
-                parser.add_argument('-f', '--force', action='store_true',
-                        help='ignore nonexistent files, never prompt')
+               # parser.add_argument('-f', '--force', action='store_true',
+               #         help='ignore nonexistent files, never prompt')
                 parser.add_argument('path', nargs='+', help='remove one or more files or directories')
                 args_list = parser.parse_args(args)
                 self.action_rm(args_list)
@@ -700,11 +739,15 @@ class CLI(cmd.Cmd):
         print color.render_color(error+': ','error')+msg
 
     # define the same action ...
+    do_q    = do_exit
+    do_cls  = do_clear
     do_quit = do_exit
-    do_q = do_exit
-    do_cls = do_clear
-    #help_q = help_quit
-    #help_cls = help_clear
+    complete_ll  = complete_ls
+    complete_cat = complete_ls
+    complete_cd  = complete_ls
+    complete_put = complete_ls
+    complete_get = complete_ls
+    complete_rm  = complete_ls
 
 def main():
     cli = CLI(username='test01',passwd='testtest',bucket='kehrspace',timeout=30,endpoint=upyun.ED_AUTO)

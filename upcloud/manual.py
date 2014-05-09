@@ -15,31 +15,50 @@ __version__ = version
 def ls():
     name = 'ls - list directory content'
     synopsis = 'ls [OPTIONS] [PATH ...]'
-    description = 'List information about the FILEs (the current directory by default).\n' + \
-                  '\n\tJust support short options now O(∩_∩)O !\n' + \
-                  '\n\t(usage example): ls\n'+\
-                  '\t\tlist current directory content.\n' + \
-                  '\n\t-d\n' + \
-                  '\t\tlist directory entries instead of contents.\n' + \
-                  '\n\t-l\n' + \
-                  '\t\tuse a long listing format.show file\'s detail information.'
+    description = '1. List the information about the FILEs, The default directory is current working directory.\n' + \
+                  '\t   example: ls\n'+\
+                  '\t2. -d, list directory entries instead of contents.\n' + \
+                  '\t   example: ls -d dir1 dir2 ...\n' + \
+                  '\t   If you want to get more information about the directory,\n' + \
+                  '\t   type: ls -ld dir1, dir2 ...\n' + \
+                  '\t3. -l, Use a long listing format.show file\'s detail information.\n' +\
+                  '\t   example: ls -l dir1 dir2 ...\n' + \
+                  '\t4. -r, Refresh the file list of current working directory.\n' +\
+                  '\t   example: ls -r\n'
+
     format_helpinfo(name, synopsis, description)
 
 def put():
     name = 'put - put file to upyun'
-    synopsis = 'put [OPTIONS] [PATH ...]'
-    description = ' \n' + \
-                  '[source] is your local file\'s path\n' + \
-                  '\t[destination] is upyun space\'s path\n' + \
-                  '\tThe [source] and [destination] are support the absolute path and the relative path.\n' 
+    synopsis = 'put [OPTIONS] PATH ...'
+    description = '1. -s, Your local file location which can be multiple files path or folders path. This parameter is required.\n' + \
+                  '\t   example: put -s file1 file2 dir1 dir2 ...\n' + \
+                  '\t2. -d, Your cloud directory location. The default path is "/".\n' + \
+                  '\t   examlpe: put -s file1 -d /temp/ \n' + \
+                  '\t3. -l, Specify the save file path level. Default is 0, it means upload the full path of file which start with "/".\n' + \
+                  '\t   The vlaue also support negative number.\n' + \
+                  '\t   Assume the full path of the file "test_file" is "/home/kehr/temp/test_file",\n'+\
+                  '\t   if you want to upload to cloud as /tmp/temp/test_file.\n'+\
+                  '\t       type: get -s /home/kehr/temp/test_file -d /tmp -l 2 \n'+\
+                  '\t   if you just want to upload the name of the file,\n'+\
+                  '\t       type: get -s /home/kehr/temp/test_file -d /tmp -l -1 \n'
     format_helpinfo(name, synopsis, description)
 
 def get():
     name = 'get - download files from upyun'
-    synopsis = 'get [OPTIONS] [PATH ...]'
-    description = '[source] is upyun space\'s path\n' + \
-                  '\t[destination] is your local file\'s path\n' + \
-                  '\tThe [source] and [destination] are support the absolute path and the relative path.\n' 
+    synopsis = 'get [OPTIONS] PATH ...'
+    description = '1. -s, Your cloud file location which can be multiple files path or folders path. This parameter is required.\n' + \
+                  '\t   example: get -s file1 file2 dir1 dir2 ...\n' + \
+                  '\t2. -d, Your local directory location. The default path is current working directory.\n' + \
+                  '\t   examlpe: get -s file1 -d /home/kehr/temp \n' + \
+                  '\t3. -l, Specify the save file path level. Default is 0, it means save the full path of file which start with "/".\n' + \
+                  '\t   The vlaue also support negative number.\n' + \
+                  '\t   Assume the full path of the file "test_file" is "/a/b/c/d/test_file",\n'+\
+                  '\t   if you want to save to local system as /home/kehr/temp/c/d/test_file.\n'+\
+                  '\t       type: get -s /a/b/c/test_file -d /home/kehr/temp -l 2 \n'+\
+                  '\t   if you just want to save the name of the file,\n'+\
+                  '\t       type: get -s /a/b/c/test_file -d /home/kehr/temp -l -1 \n'
+
     format_helpinfo(name, synopsis, description)
 
 def cd():
@@ -58,12 +77,12 @@ def pwd():
 
 def mkdir():
     name = 'mkdir - make directories'
-    synopsis = 'mkdir DIRECTORY ...'
+    synopsis = 'mkdir [OPTION] DIRECTORY ...'
     description = 'Create the DIRECTORYs, if they do not already exist.\n' +\
-                  '\t1. You can use the -p parameter to create multiple directories.\n ' +\
-                  '\t   example: mkdir -p /a/b/c/d\n' + \
-                  '\t2. The mkdir will create folders in the current directory by default.\n' + \
-                  '\t   example: mkdir dir1 dir2 ...'
+                  '\t1. This command will create folders in the current directory by default.\n' + \
+                  '\t   example: mkdir dir1 dir2 ...\n' + \
+                  '\t2. -p, You can use the -p parameter to create multiple directories.\n ' +\
+                  '\t   example: mkdir -p /a/b/c/d\n' 
     format_helpinfo(name, synopsis, description)
 
 def cat():
@@ -80,8 +99,12 @@ def cat():
 
 def rm():
     name = 'rm - remove files or directories'
-    synopsis = 'rm [FILEs OR DIRECTORYs PATH]'
-    description = 'support the absolute path and the relative path.\n'
+    synopsis = 'rm [OPTION] FILEs ...'
+    description = 'support the absolute path and the relative path.\n' + \
+                  '\t1. Remove empty directory and normal files.\n' + \
+                  '\t   example: rm file1 file2 ...\n' + \
+                  '\t2. -r, Remove directories and their contents recursively.\n' + \
+                  '\t   example: rm -r dir1 dir2 ...\n'
     format_helpinfo(name, synopsis, description)
 
 def usage():
@@ -100,14 +123,16 @@ def quit():
     name = 'quit | q - exit program '
     synopsis = 'quit | q'
     description = "The command 'quit' and 'q' have the same action as command 'exit'.\n" + \
-                  "\tplease run help exit see more info."
+                  "\tplease run help exit see more info.\n"
 
     format_helpinfo(name, synopsis, description)
 
 def help():
     name = 'help - help you get more command usage'
     synopsis = 'help [command]'
-    format_helpinfo(name, synopsis)
+    description = 'You can use this command get more information.\n' + \
+                  '\texample: help ls or ?ls'
+    format_helpinfo(name, synopsis, description)
 
 def clear():
     name = 'clear  - clear the terminal screen'

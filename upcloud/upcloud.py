@@ -36,8 +36,6 @@ class upcloud():
                                  self.TIMEOUT, 
                                  self.ENDPOINT)
         self.print_connect_info()
-        
-
 
     def upload(self, src, des='/'):
         print "Uploading file ..."
@@ -84,6 +82,10 @@ class upcloud():
     def get_file_list(self, path, flag=True):
         if flag:
             self.filelist = self.cloud.getlist(path)
+            self.file_name_cache = []
+            for files in self.filelist:
+                self.file_name_cache.append(files['name'])
+
             return self.filelist
         else:
             return self.cloud.getlist(path)
@@ -98,7 +100,8 @@ class upcloud():
         if path.startswith('/') and path.endswith('/'):
             dir_info = self.cloud.getinfo(path)
             if dir_info['file-type'] != 'folder':
-                print path+' is not a directory !'
+                import color 
+                print color.render_color('Error: ','error') + path[:-1]+' is not a directory !'
                 return
         else:
             print 'The directory path is not absolute path.'
