@@ -2,6 +2,7 @@
 
 这个项目的目标是实现 **云空间本地化管理**。你可以用本项目提供的操作同步或备份你的云空间数据。
 
+
 **Github:**  https://github.com/kehr/upcloud  
 **GitCafe:** https://gitcafe.com/kehr/upcloud-for-UPYUN   
 **投票地址:** http://upyun.gitcafe.com/projects?category=top50      
@@ -36,6 +37,11 @@ upcloud -b BUCKET -u USERNAME -p
 获取命令帮助:`command [-h|--help]`  
 获取详细说明:`man [command]`
 
+##文档   
+
+**参考在线使用教程：**[Tutorial](docs/README.md)  
+下载文档：[Tutorial](docs/Tutorial.pdf)
+
 ##特色  
 
 1. 支持命令历史回滚
@@ -65,6 +71,7 @@ upcloud -b BUCKET -u USERNAME -p
 正在实现文件下载进度条。
 
 ##History:    
+2014-5-10 完成Tutorial手册  
 2014-5-09 完成当前工作目录下文件名自动补全和所有命令帮助文档    
 2014-5-03 发布0.1.3 alpha,优化部分代码   
 2014-5-02 完成所有命令   
@@ -77,7 +84,6 @@ upcloud -b BUCKET -u USERNAME -p
 ##TODO   
 
 1. 测试和重构代码  
-2. 完善帮助文档
 
 (P.S. 又拍云的SDK用起来真不好受:cry:)   
 
