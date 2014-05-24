@@ -10,6 +10,20 @@
 #########################################################################
 import os
 import upyun
+from progressbar import *
+
+class ProgressBarHandler(object):
+    def __init__(self, totalsize, params):
+        widgets = [params, Percentage(), ' ',
+                   Bar(marker='=', left='[', right=']'), ' ',
+                   ETA(), ' ', FileTransferSpeed()]
+        self.pbar = ProgressBar(widgets=widgets, maxval=totalsize).start()
+
+    def update(self, readsofar):
+        self.pbar.update(readsofar)
+
+    def finish(self):
+        self.pbar.finish()
 
 class upcloud():
 
@@ -38,20 +52,20 @@ class upcloud():
         self.print_connect_info()
 
     def upload(self, src, des='/'):
-        print "Uploading file ..."
+       # print "Uploading file ..."
        # headers = {"x-gmkerl-rotate": "180"}
         with open(src, 'rb') as f:
-            res = self.cloud.put(des, f, checksum=False)
+            res = self.cloud.put(des, f, checksum=False, handler=ProgressBarHandler, params="Uploading ")
     
     def download(self, src, des):
-        print "Downloading file ..."
+       # print "Downloading file ..."
         file_path = '/'.join(des.split('/')[:-1])
         # 处理文件以/开头的情况
         if file_path: 
             if not os.path.exists(file_path):
                 os.makedirs(file_path)
         with open(des, 'wb') as f:
-            self.cloud.get(src, f)
+            self.cloud.get(src, f, handler=ProgressBarHandler, params="Downloading ")
     
     def cat(self, path):
         cache_path = '/tmp/upcloud'
