@@ -45,7 +45,7 @@ optional arguments:
   -p, --passwd          The operator’s password of this bucket (default:
                         False)
   -t TIMEOUT, --timeout TIMEOUT
-                        The HTTP request timeout time (default: 30)
+                        The HTTP request timeout time (default: 60)
   -e {auto,telecom,cnc,ctt}, --endpoint {auto,telecom,cnc,ctt}
                         The network access point (default: auto)
 ```   
@@ -61,7 +61,7 @@ Password for test01:
 ==============================
 + Bucketname: kehrspace
 + Username: test01  
-+ Timeout:  30  
++ Timeout:  60  
 + EndPoint: v0.api.upyun.com  
 + Workspace: / 
 ==============================
@@ -92,7 +92,7 @@ test01@kehrspace >
 - -b， 又拍云空间名称【必填】
 - -u， 空间管理员（操作员）姓名【必填】
 - -p， 后无参数，回车后输入管理员（操作员）密码，输入时密码不会明文显示【必填】
-- -t， 连接又拍云的HTTP请求超时时间，默认是30s
+- -t， 连接又拍云的HTTP请求超时时间，默认是60s
 - -e， 连接线路，可选：`auto`自动,`telecom`电信,`cnc`联通网通,`ctt`移动铁通，默认是`auto`
 
 ###2. 获取帮助

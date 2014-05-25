@@ -23,7 +23,7 @@ from datetime import datetime
 
 class CLI(cmd.Cmd):
 
-    def __init__(self, prompt='>>> ',bucket=None, username=None, passwd=None, timeout=30, endpoint=upyun.ED_AUTO):
+    def __init__(self, prompt='>>> ',bucket=None, username=None, passwd=None, timeout=60, endpoint=upyun.ED_AUTO):
         cmd.Cmd.__init__(self)
         self.intro = manual.get_tips()
         self.doc_header=color.render_color('All commands you can use (type help <command> get more info):')
@@ -282,6 +282,8 @@ class CLI(cmd.Cmd):
         destination = self.abspath(args.destination)
         # 预先处理路径，解决使用 . 或 .. 时多返回一级目录的问题。
         for path in args.source:
+            if path == '*':
+                path = '.'
             source_list.append(os.path.abspath(path))
         level = args.level
         print 'level:',level
@@ -750,7 +752,7 @@ class CLI(cmd.Cmd):
     complete_rm  = complete_ls
 
 def main():
-    cli = CLI(username='test01',passwd='testtest',bucket='kehrspace',timeout=30,endpoint=upyun.ED_AUTO)
+    cli = CLI(username='test01',passwd='testtest',bucket='kehrspace',timeout=60,endpoint=upyun.ED_AUTO)
     try:
         cli.cmdloop()
     except KeyboardInterrupt:

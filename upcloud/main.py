@@ -38,7 +38,7 @@ class cmd_parser():
             help='The operator\'s name of this bucket')
         self.parser.add_argument('-p', '--passwd', action='store_true',required=True,
             help='The operator\'s password of this bucket')
-        self.parser.add_argument('-t', '--timeout',default=30, type=int,
+        self.parser.add_argument('-t', '--timeout',default=60, type=int,
             help='The HTTP request timeout time')
         self.parser.add_argument('-e', '--endpoint',default='auto',choices=["auto","telecom","cnc","ctt"],
             help='The network access point')
@@ -71,7 +71,7 @@ class cmd_parser():
             return upyun.ED_CTT
         return upyun.ED_AUTO
           
-    def handle_jobs(self, bucket, username, passwd, timeout=30, endpoint=upyun.ED_AUTO):
+    def handle_jobs(self, bucket, username, passwd, timeout=60, endpoint=upyun.ED_AUTO):
         prompt = self.args.username+'@'+self.args.bucket+' > ' 
         cli = CLI(prompt, bucket, username, passwd, timeout, endpoint)
         self.loop(cli)

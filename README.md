@@ -45,6 +45,8 @@ upcloud -b BUCKET -u USERNAME -p
 获取命令帮助:`command [-h|--help]`  
 获取详细说明:`man [command]`
 
+如果使用过程中出现文件不存在错误，请使用命令`ls -r`刷新本地缓存。   
+
 ##文档   
 
 **参考在线使用教程：**[Tutorial](docs/README.md)  

@@ -54,8 +54,15 @@ class upcloud():
     def upload(self, src, des='/'):
        # print "Uploading file ..."
        # headers = {"x-gmkerl-rotate": "180"}
-        with open(src, 'rb') as f:
-            res = self.cloud.put(des, f, checksum=False, handler=ProgressBarHandler, params="Uploading ")
+       # 当文件为空时，progressbar无法处理，会抛出异常ZeroDivisionError。
+        if os.path.getsize(src) != 0:
+            with open(src, 'rb') as f:
+                res = self.cloud.put(des, f, checksum=False, handler=ProgressBarHandler, params="Uploading ")
+        else:
+            #print "File %s is empty ! ingored. File is not uploaded." % src
+            print "File %s is empty ! uploading ..." % src
+            with open(src, 'rb') as f:
+                res = self.cloud.put(des, f, checksum=False)
     
     def download(self, src, des):
        # print "Downloading file ..."
