@@ -1,8 +1,8 @@
 # upcloud
 
 ![upload](./img/upload.png)
-![upload](./img/ls.png)
-
+![list file](./img/ls.png)
+ 
 
 这个项目的目标是实现 **云空间本地化管理**。你可以用本项目提供的操作同步或备份你的云空间数据。
 
@@ -83,6 +83,7 @@ upcloud -b BUCKET -u USERNAME -p
 
 
 ##History:    
+2014-5-31 增加ls命令显示文件，按照时间、大小、类型、文件名排序  
 2014-5-24 增加上传下载进度条    
 2014-5-10 完成Tutorial手册   
 2014-5-09 完成当前工作目录下文件名自动补全和所有命令帮助文档    

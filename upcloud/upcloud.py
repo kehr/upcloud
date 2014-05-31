@@ -18,15 +18,15 @@ class ProgressBarHandler(object):
                    Bar(marker='>', left='[', right=']'), ' ',
                    ETA(), ' ', FileTransferSpeed()]
         self.pbar = ProgressBar(widgets=widgets, maxval=totalsize).start()
-
+ 
     def update(self, readsofar):
         self.pbar.update(readsofar)
-
+ 
     def finish(self):
         self.pbar.finish()
 
 class upcloud():
-
+ 
     def __init__(self, bucketname=None, username=None, password=None, timeout=30, endpoint=upyun.ED_AUTO, workspace='/'):
         ''' Initialize the user infomation and the access point !
             param:
@@ -78,16 +78,17 @@ class upcloud():
         cache_path = '/tmp/upcloud'
         file_path = cache_path+'/'.join(path.split('/')[:-1])+'/'
         file_name = '/'.join(path.split('/')[-1:])
+        
         if not os.path.exists(file_path):
             os.makedirs(file_path)
+      
+        cache_file =  file_path + file_name 
+        if os.path.exists(cache_file) and not os.path.isdir(cache_file):
+            return cache_file
         else:
-            cache_file =  file_path + file_name 
-            if os.path.exists(cache_file) and not os.path.isdir(cache_file):
-                return cache_file
-            else:
-                with open(cache_file, 'wb') as f:
-                    self.cloud.get(path, f)
-                    return cache_file 
+            with open(cache_file, 'wb') as f:
+                self.cloud.get(path, f)
+                return cache_file 
 
     def mkdir(self, path):
         print 'creating directory %s ...' % path
@@ -150,6 +151,4 @@ class upcloud():
 
          
 if __name__ == '__main__':
-    up = upcloud('kehrspace','kehr','kehr4444')
-    print up.get_file_info('/a/b/c/d/')
-    print up.get_file_info('/a/')
+    pass 

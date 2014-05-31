@@ -31,7 +31,9 @@ class CLI(cmd.Cmd):
         self.prompt = color.render_color(prompt,'blue')
         self.init_upcloud(bucket, username, passwd, timeout, endpoint)
         self.current_local_workspace = os.path.abspath('.')
-
+        self.sort_flag = 'name'
+        self.reverse = False
+ 
     # do_command methods ...
     def do_man(self,args):
         '''Show the detail message of command.'''
@@ -39,7 +41,7 @@ class CLI(cmd.Cmd):
             self.cmdline('man', args)
         except SystemExit:
             pass
-    
+     
     def do_ll(self, args):
         try:
             self.do_ls('-l '+args)
@@ -50,7 +52,7 @@ class CLI(cmd.Cmd):
             self.cmdline('ls', args)
         except SystemExit:
             print 'Type "ls -h" for help.'
-
+ 
     def do_put(self, args):
         try:
             current_local_path = os.path.abspath('.')
@@ -170,6 +172,9 @@ class CLI(cmd.Cmd):
         # refresh the cache of current workspace
         if args.refresh:
             self.cloud.get_file_list(self.cloud.get_current_workspace())
+        
+        self.sort_flag = args.sort
+        self.reverse = args.reverse 
 
         if '*' in path_list:
             path_list = self.show_file_list(None,self.cloud.get_current_workspace())
@@ -239,6 +244,9 @@ class CLI(cmd.Cmd):
         color_format = '%s  '+color.render_color('%-6s','purple')+'  %9s  '+color.render_color('%-s','blue')
         normal_format = '%s  '+color.render_color('%-6s','green')+'  %9s  '+color.render_color('%-s','yellow')
         
+        # sort bye file name 
+        info_list = sorted(info_list, key=lambda info_list : info_list[self.sort_flag], reverse=self.reverse)
+
         for info in info_list:
             info_time = datetime.fromtimestamp(int(info['time']))
             info_type = info['type']
@@ -447,7 +455,6 @@ class CLI(cmd.Cmd):
         else:
             local_file = self.cloud.cat(file_path[:-1])
             if not local_file:
-                print local_file
                 print self.show_error('File not exists !')
                 return
             
@@ -459,7 +466,7 @@ class CLI(cmd.Cmd):
             if  args.number:
                 command = 'head -n '+str(args.number)+' '+local_file+' | cat -n' 
             else:
-                command = 'cat '+local_file + ' | cat -n'
+                command = 'cat '+local_file + ' -n'
             self.do_shell(command)
 
     def action_rm(self, args):
@@ -612,6 +619,10 @@ class CLI(cmd.Cmd):
                         help='list directory entries instead of contents')
                 parser.add_argument('-r', '--refresh',action='store_true', 
                         help='refresh the file list of current workspace')
+                parser.add_argument('-R', '--reverse',action='store_true', 
+                        help='list subdirectories recursively')
+                parser.add_argument('-s', '--sort',default='name', choices=['name','type','size','time'],
+                        help='sort the file list')
                 args_list = parser.parse_args(args)
                 self.action_ls(args_list)
             elif command == 'put':

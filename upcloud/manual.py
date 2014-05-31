@@ -17,25 +17,29 @@ def ls():
     synopsis = 'ls [OPTIONS] [PATH ...]'
     description = '1. List the information about the FILEs, The default directory is current working directory.\n' + \
                   '\t   example: ls\n'+\
-                  '\t2. -d, list directory entries instead of contents.\n' + \
+                  '\t2. -d, --directory, list directory entries instead of contents.\n' + \
                   '\t   example: ls -d dir1 dir2 ...\n' + \
                   '\t   If you want to get more information about the directory,\n' + \
                   '\t   type: ls -ld dir1, dir2 ...\n' + \
-                  '\t3. -l, Use a long listing format.show file\'s detail information.\n' +\
+                  '\t3. -l, --list, Use a long listing format.show file\'s detail information.\n' +\
                   '\t   example: ls -l dir1 dir2 ...\n' + \
-                  '\t4. -r, Refresh the file list of current working directory.\n' +\
-                  '\t   example: ls -r\n'
+                  '\t4. -r, --refresh, Refresh the file list of current working directory.\n' +\
+                  '\t   example: ls -r\n' + \
+                  '\t5. -R, --reverse, list subdirectories recursively.\n' +\
+                  '\t   example: ls -R\n' + \
+                  '\t6. -s, --sort, sort the file list. You can sort it by name, type, size, or time.\n' +\
+                  '\t   example: ls -s time\n' 
 
     format_helpinfo(name, synopsis, description)
 
 def put():
     name = 'put - put file to upyun'
     synopsis = 'put [OPTIONS] PATH ...'
-    description = '1. -s, Your local file location which can be multiple files path or folders path. This parameter is required.\n' + \
+    description = '1. -s, --source, Your local file location which can be multiple files path or folders path. This parameter is required.\n' + \
                   '\t   example: put -s file1 file2 dir1 dir2 ...\n' + \
-                  '\t2. -d, Your cloud directory location. The default path is "/".\n' + \
+                  '\t2. -d, --destination, Your cloud directory location. The default path is "/".\n' + \
                   '\t   examlpe: put -s file1 -d /temp/ \n' + \
-                  '\t3. -l, Specify the save file path level. Default is 0, it means upload the full path of file which start with "/".\n' + \
+                  '\t3. -l, --level, Specify the save file path level. Default is 0, it means upload the full path of file which start with "/".\n' + \
                   '\t   The vlaue also support negative number.\n' + \
                   '\t   Assume the full path of the file "test_file" is "/home/kehr/temp/test_file",\n'+\
                   '\t   if you want to upload to cloud as /tmp/temp/test_file.\n'+\
@@ -47,11 +51,11 @@ def put():
 def get():
     name = 'get - download files from upyun'
     synopsis = 'get [OPTIONS] PATH ...'
-    description = '1. -s, Your cloud file location which can be multiple files path or folders path. This parameter is required.\n' + \
+    description = '1. -s, --source, Your cloud file location which can be multiple files path or folders path. This parameter is required.\n' + \
                   '\t   example: get -s file1 file2 dir1 dir2 ...\n' + \
-                  '\t2. -d, Your local directory location. The default path is current working directory.\n' + \
+                  '\t2. -d, destination, Your local directory location. The default path is current working directory.\n' + \
                   '\t   examlpe: get -s file1 -d /home/kehr/temp \n' + \
-                  '\t3. -l, Specify the save file path level. Default is 0, it means save the full path of file which start with "/".\n' + \
+                  '\t3. -l, --level, Specify the save file path level. Default is 0, it means save the full path of file which start with "/".\n' + \
                   '\t   The vlaue also support negative number.\n' + \
                   '\t   Assume the full path of the file "test_file" is "/a/b/c/d/test_file",\n'+\
                   '\t   if you want to save to local system as /home/kehr/temp/c/d/test_file.\n'+\
@@ -81,7 +85,7 @@ def mkdir():
     description = 'Create the DIRECTORYs, if they do not already exist.\n' +\
                   '\t1. This command will create folders in the current directory by default.\n' + \
                   '\t   example: mkdir dir1 dir2 ...\n' + \
-                  '\t2. -p, You can use the -p parameter to create multiple directories.\n ' +\
+                  '\t2. -p, --parent, You can use the -p parameter to create multiple directories.\n ' +\
                   '\t   example: mkdir -p /a/b/c/d\n' 
     format_helpinfo(name, synopsis, description)
 
@@ -89,9 +93,9 @@ def cat():
     name = 'cat - view the online file content'
     synopsis = 'cat [OPTION] FILE'
     description = 'The parameter FILE  support the absolute path and the relative path.\n' + \
-                  '\t1. -n, View the first n line of the  file. As the head command.\n' + \
+                  '\t1. -n, --number, View the first n line of the  file. As the head command.\n' + \
                   '\t   example: cat -n 10 test_file \n' + \
-                  '\t2. -t, View the After n line of the file. As the tail command. \n' + \
+                  '\t2. -t, --tail, View the After n line of the file. As the tail command. \n' + \
                   '\t   example: cat -t 10 test_file \n' + \
                   '\t3. View all content of the file by default.\n' + \
                   '\t   example: cat test_file\n'
@@ -103,7 +107,7 @@ def rm():
     description = 'support the absolute path and the relative path.\n' + \
                   '\t1. Remove empty directory and normal files.\n' + \
                   '\t   example: rm file1 file2 ...\n' + \
-                  '\t2. -r, Remove directories and their contents recursively.\n' + \
+                  '\t2. -r, --recursive,  Remove directories and their contents recursively.\n' + \
                   '\t   example: rm -r dir1 dir2 ...\n'
     format_helpinfo(name, synopsis, description)
 
