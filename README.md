@@ -36,7 +36,7 @@
 ```bash
 sudo pip install upcloud
 ```
-该项目正在开发，目前发布版本是`v0.1.5 Beta`。最新版本会修复bug，完善命令功能，更加易用。  
+该项目正在开发，目前发布版本是`v0.1.6 Beta`。最新版本会修复bug，完善命令功能，更加易用。  
 你可以使用`sudo pip install upcloud --upgrade`升级你当前使用的版本（ **强烈建议！**）  
 
 感谢你的支持！欢迎提出你的意见和想法。

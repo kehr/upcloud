@@ -25,8 +25,9 @@ setup(
     packages=['upcloud'],
     keywords=['upyun', 'upcloud','python', 'client'],
     install_requires=[
+        "requests >= 2.3.0",
         "upyun >= 2.2.0",
-        "progressbar >= 2.2"
+        "progressbar2 >= 2.6"
     ],
     entry_points={
         'console_scripts': [

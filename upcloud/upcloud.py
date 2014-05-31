@@ -15,7 +15,7 @@ from progressbar import *
 class ProgressBarHandler(object):
     def __init__(self, totalsize, params):
         widgets = [params, Percentage(), ' ',
-                   Bar(marker='=', left='[', right=']'), ' ',
+                   Bar(marker='>', left='[', right=']'), ' ',
                    ETA(), ' ', FileTransferSpeed()]
         self.pbar = ProgressBar(widgets=widgets, maxval=totalsize).start()
 
