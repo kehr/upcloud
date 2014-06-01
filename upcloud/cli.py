@@ -269,9 +269,8 @@ class CLI(cmd.Cmd):
             names.append(info_name)
             name_list.append({info_name:info_type})
 
-        name_list.sort()
-        name_dir_format = color.render_color('%-s', 'blue')
-        name_file_format = color.render_color('%-s', 'yellow')
+        name_dir_format = color.render_color('%s\n', 'blue')
+        name_file_format = color.render_color('%s\n', 'yellow')
 
         if not flag: 
             for name in name_list:
