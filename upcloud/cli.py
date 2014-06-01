@@ -404,10 +404,10 @@ class CLI(cmd.Cmd):
         for directory in args.path:
             directory = self.abspath(directory)
             if args.parents:
-                print 'recursive create the directory: %s' % directory
+                print 'recursive create the directory: %s' % color.render_color(directory,'blue')
                 dir_list = directory.split('/')[1:-1]
                 # 先检查第一级目录
-                parent_dir = self.abspath(dir_list[0])
+                parent_dir = '/' + dir_list[0] + '/'
                 file_type = self.check(parent_dir)
                 if not file_type:
                     self.cloud.mkdir(parent_dir)
@@ -494,11 +494,11 @@ class CLI(cmd.Cmd):
             self.show_error(msg)
             return
         else:
-            print '+'*50
+            print '\n','='*45
             print color.render_color(path,'path')+': '
             file_list = self.show_file_list(True,path)
+            print 'removing '+color.render_color(path,'blue') +': '
             for file_name in file_list:
-                print 'removing '+color.render_color(path,'blue') +': '
                 sub_path = path + file_name+'/'
                 if self.check(sub_path) == 'folder':
                     self.recursive_rm(sub_path)
